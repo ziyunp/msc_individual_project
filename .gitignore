@@ -1,1 +1,7 @@
 data/*
+
+*.txt
+
+*.png
+
+*.pyc
