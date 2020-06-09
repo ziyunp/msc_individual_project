@@ -8,6 +8,7 @@ import os
 from tqdm import tqdm
 from sklearn.neighbors import NearestNeighbors
 import sys
+import plot_kdist as plot
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
@@ -72,7 +73,8 @@ def main():
       df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
       fig = "Fig" + str(count) + ".png"
       count += 1
-      make_hausdorff_matrix(df_sub, True)
+      distances = make_hausdorff_matrix(df_sub, True)
+      plot.plot_kdist(distances, fig)
 
 if __name__ == "__main__":
   main()
