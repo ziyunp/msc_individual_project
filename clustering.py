@@ -31,29 +31,22 @@ def make_points(df):
     return [np.array(item) for item in zip(df[cn.EVENT_LAT], df[cn.EVENT_LONG])]
 
 def make_hausdorff_matrix(df, symm=False):
-  cache = {}
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
   distances = np.zeros((n, n))
   for r in range(n):
-    for c in range(n):
-      if (c in cache) and (r in cache[c]):
-        distances[r, c] = cache[c][r]
+    for c in range(r + 1, n):
+      u_id = leg_ids[r]
+      v_id = leg_ids[c]
+      u = df[df[cn.LEG_ID] == u_id]
+      v = df[df[cn.LEG_ID] == v_id]
+      u = make_points(u)
+      v = make_points(v)
+      if symm:
+          distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
       else:
-        u_id = leg_ids[r]
-        v_id = leg_ids[c]
-        u = df[df[cn.LEG_ID] == u_id]
-        v = df[df[cn.LEG_ID] == v_id]
-        u = make_points(u)
-        v = make_points(v)
-        if symm:
-            distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
-        else:
-            distances[r, c] = directed_hausdorff(u, v)[0]
-        if r not in cache:
-          cache[r] = { c: distances[r, c] }
-        else:
-          cache[r][c] = distances[r, c]
+          distances[r, c] = directed_hausdorff(u, v)[0]
+      distances[c, r] = distances[r, c]
   return distances    
 
 
