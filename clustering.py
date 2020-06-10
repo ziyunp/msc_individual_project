@@ -15,9 +15,9 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
 """
   TODO:
-  1. Group pings by legs
-  2. Get regular hausdorff distance
-  3. Run plot_kdist for pings in one leg
+  1. Group pings by legs / 
+  2. Get regular hausdorff distance / 
+  3. Run plot_kdist for pings between two RM sites /
   4. Look for modification to use MLHD
 """
 
@@ -50,14 +50,16 @@ def make_hausdorff_matrix(df, symm=False):
             distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
         else:
             distances[r, c] = directed_hausdorff(u, v)[0]
-        if r != c:
+        if r not in cache:
           cache[r] = { c: distances[r, c] }
+        else:
+          cache[r][c] = distances[r, c]
   return distances    
 
 
 def main():
   data_file = config.PATHS["labelled_data"]# file stored locally
-  log.info("Reading in data with leg_ids from  from {}".format(data_file))
+  log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
 
   log.info("Getting unique from/to RM site combinations that don't arrive and depart at the same place")
