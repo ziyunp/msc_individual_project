@@ -24,7 +24,7 @@ def has_pings_more_than_5min_apart(data):
   return False
 
 def main():
-  data_file = config.PATHS["all_data"] # file stored locally
+  data_file = config.FILENAMES["all_data"] # file stored locally
   log.info("Reading in data with leg_ids from  from {}".format(data_file))
 
   data = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])

@@ -10,16 +10,18 @@ from sklearn.neighbors import NearestNeighbors
 import sys
 import plot_kdist as plot
 
+"""
+  Eps values showed by k-dist plot:
+  - Fig1: 0.02
+  - Fig2: 0.05
+  - Fig3: 0.05
+  - Fig4: 0.1
+  - Fig5: 0.04
+  - Fig6: 0.08
+"""
+
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
-
-"""
-  TODO:
-  1. Group pings by legs / 
-  2. Get regular hausdorff distance / 
-  3. Run plot_kdist for pings between two RM sites /
-  4. Look for modification to use MLHD
-"""
 
 def make_points(df):
     """
@@ -51,7 +53,7 @@ def make_hausdorff_matrix(df, symm=False):
 
 
 def main():
-  data_file = config.PATHS["labelled_data"]# file stored locally
+  data_file = config.FILENAMES["all_data"] # file stored locally
   log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
 

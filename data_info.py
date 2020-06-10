@@ -9,6 +9,8 @@ import utils.config as config
   - 883 unique leg_ids
   - 882 unique duty_ids
   - 19 unique clusters
+  - Date range: 20191001 - 20200129
+  - 9 pairs RM sites
 """
 
 log = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ def count_distinct_ids(data):
   
 
 def main():
-  data_file = config.PATHS["all_data"] # file stored locally
+  data_file = config.FILENAMES["all_data"] # file stored locally
   log.info("Reading in data with leg_ids from  from {}".format(data_file))
 
   data = pd.read_csv(data_file)
