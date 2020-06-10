@@ -12,14 +12,15 @@ import utils.config as config
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
-def has_pings_more_than_5min_apart(data):
+MISSING_PING_THRESHOLD = 10 # defines a missing ping if two consecutive pings are >= 10 min apart
+
+def has_missing_pings(data):
   total = len(data)
   for i in range(total - 1):
     this_ping = data.iloc[i]
     next_ping = data.iloc[i + 1]
     diff = next_ping[cn.EVENT_DTTM] - this_ping[cn.EVENT_DTTM]
-    if diff > pd.Timedelta(5, 'minute'):
-      print(this_ping[cn.LEG_ID], ": ", this_ping[cn.EVENT_DTTM])
+    if diff >= pd.Timedelta(MISSING_PING_THRESHOLD, 'minute'):
       return True
   return False
 
@@ -29,17 +30,33 @@ def main():
 
   data = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
   legs = data[cn.LEG_ID].unique()
+
+  log.info("Initial number of pings: {}".format(len(data)))
   log.info("{} distinct leg_ids from this dataset".format(len(legs)))
 
-  log.info("Scanning each leg for pings more than 5min apart...")
+  log.info("Scanning each leg for missing pings...")
   
   legs_with_missing_pings = []
   for leg_id in legs:
     data_sub = data[data[cn.LEG_ID] == leg_id]
-    if has_pings_more_than_5min_apart(data_sub):
+    if has_missing_pings(data_sub):
       legs_with_missing_pings.append(leg_id)
   
-  log.info("{} legs have two consecutive pings that are more than 5 min apart".format(len(legs_with_missing_pings)))
+  log.info("{} legs have two consecutive pings that are >= {} min apart".format(len(legs_with_missing_pings), MISSING_PING_THRESHOLD))
+
+  log.info("Removing legs with missing pings...")
+  for leg_id in legs_with_missing_pings:
+    data = data[data[cn.LEG_ID] != leg_id]
+
+  log.info("Final number of pings: {}".format(len(data)))
+  log.info("{} leg_ids at end of classification".format(data[cn.LEG_ID].nunique()))
+
+  # Generate the export path for the isotrak file with road labels
+  export_path = config.FILENAMES["all_data_cleaned"] 
+  log.info("Writing out classified data to {}".format(export_path))
+  data.to_csv(export_path, index=False)
+  log.info("Preprocessing done")
+
 
 if __name__ == "__main__":
   main()
