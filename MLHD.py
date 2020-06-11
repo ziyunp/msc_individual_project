@@ -4,6 +4,7 @@ import logging
 import os
 import utils.column_names as cn
 import utils.config as config
+import utils.line_functions as lf
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from statistics import mean
@@ -19,15 +20,12 @@ def find_best_fit(xs, ys):
   m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs) * mean(xs) - mean(xs * xs))
   # find intercept
   c = mean(ys) - m * mean(xs)
-  x = []
-  y = []
   # Take first and last points t c
   x1 = xs[0]
   x2 = xs[-1]
   y1 = m * xs[0] + c
   y2 = m * xs[-1] + c
-  line = { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c }
-  return line
+  return lf.construct_line((x1,y1), (x2,y2), m, c)
 
 def make_lines(df):
     """
@@ -63,9 +61,6 @@ def make_lines(df):
         lines.append(line)
     return lines
 
-def distance_between_two_points(p1, p2):
-  return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
-
 def angle_distance_btw_two_lines(l1, l2):
   """
     Calculates the angle distance between two lines.
@@ -75,8 +70,8 @@ def angle_distance_btw_two_lines(l1, l2):
   """
   m1 = l1["m"]
   m2 = l2["m"]
-  l1_length = distance_between_two_points(l1["p1"], l1["p2"])
-  l2_length = distance_between_two_points(l2["p1"], l2["p2"])
+  l1_length = lf.distance_between_two_points(l1["p1"], l1["p2"])
+  l2_length = lf.distance_between_two_points(l2["p1"], l2["p2"])
   angle = math.degrees(math.atan(abs((m2 - m1)/(1 + m1 * m2))))
   return min(l1_length, l2_length) * math.sin(angle)
 
@@ -95,12 +90,13 @@ def compute_MLHD(lines_M, lines_N):
   x_max = max(xm)
   y_min = min(ym)
   y_max = max(ym)
-  Rm = distance_between_two_points((x_min, y_min), (x_max, y_max)) / 2
+  Rm = lf.distance_between_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
   for m in lines_M:
-    m_length = distance_between_two_points(m["p1"], m["p2"])
+    m_length = lf.distance_between_two_points(m["p1"], m["p2"])
     total_M_length += m_length
+    # perpendicular_distance_btw_two_lines(m, lines_N[0])
     # N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
     # d_angle = find_angle_distance(m, N_neighbor)
     # d_perp = find_perpendicular_distance(m, N_neighbor)
