@@ -66,6 +66,20 @@ def make_lines(df):
 def distance_between_two_points(p1, p2):
   return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
+def angle_distance_btw_two_lines(l1, l2):
+  """
+    Calculates the angle distance between two lines.
+    The smallest positive intersecting angle between the two lines is calculated by using the gradient of the two lines.
+    :param l1: line1, l2: line2
+    :return: angle distance between two lines
+  """
+  m1 = l1["m"]
+  m2 = l2["m"]
+  l1_length = distance_between_two_points(l1["p1"], l1["p2"])
+  l2_length = distance_between_two_points(l2["p1"], l2["p2"])
+  angle = math.degrees(math.atan(abs((m2 - m1)/(1 + m1 * m2))))
+  return min(l1_length, l2_length) * math.sin(angle)
+
 def compute_MLHD(lines_M, lines_N): 
   log.info("M has {} lines".format(len(lines_M)))
   log.info("N has {} lines".format(len(lines_N)))
@@ -87,7 +101,7 @@ def compute_MLHD(lines_M, lines_N):
   for m in lines_M:
     m_length = distance_between_two_points(m["p1"], m["p2"])
     total_M_length += m_length
-    # N_neighbor = within_neighborhood(m, Rm, lines_N)
+    # N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
     # d_angle = find_angle_distance(m, N_neighbor)
     # d_perp = find_perpendicular_distance(m, N_neighbor)
     # d_parallel = find_parallel_distance(m, N_neighbor)
