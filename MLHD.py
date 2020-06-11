@@ -13,7 +13,7 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 PING_INTERVAL = 5
 
-def find_best_fit_slope_and_intercept(xs, ys):
+def find_best_fit(xs, ys):
   # find slope
   m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs) * mean(xs) - mean(xs * xs))
   # find intercept
@@ -22,20 +22,19 @@ def find_best_fit_slope_and_intercept(xs, ys):
   x = []
   y = []
   # Take first and last points t c
-  x.append(xs[0])
-  x.append(xs[-1])
-  y.append(m * xs[0] + c)
-  y.append(m * xs[-1] + c)
-
-  coords = np.vstack([x,y]).T
-  return coords
+  x1 = xs[0]
+  x2 = xs[-1]
+  y1 = m * xs[0] + c
+  y2 = m * xs[-1] + c
+  line = { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c }
+  return line
 
 def make_lines(df):
     """
     Takes in a dataframe with the lat/lon points in Event_Lat and Event_Long columns
     Returns a list of the lines for the modified line Hausdorff distance function
     :param df: dataframe with lat/lon points in separate columns
-    :return: list of lines with [[lat1, lon1], [lat2, lon2]] representing a line
+    :return: list of lines with { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c } representing a line
     """
     lines = []
     df = df[[cn.LEG_ID, cn.EVENT_LAT, cn.EVENT_LONG, cn.EVENT_DTTM]]
@@ -60,15 +59,12 @@ def make_lines(df):
         xs = points[cn.EVENT_LAT].to_numpy()
         ys = points[cn.EVENT_LONG].to_numpy()
 
-        line = find_best_fit_slope_and_intercept(xs, ys)
+        line = find_best_fit(xs, ys)
         lines.append(line)
-        # x = []
-        # y = []
-        # x.append(line[0][0])
-        # x.append(line[1][0])
-        # y.append(line[0][1])
-        # y.append(line[1][1])
-        
+        # x1, y1 = line["p1"]
+        # x2, y2 = line["p2"]
+        # x = [ x1, x2 ]
+        # y = [ y1, y2 ]
         # plt.scatter(xs, ys)
         # plt.plot(x, y)
         # plt.show() 
@@ -86,6 +82,7 @@ def make_MLHD_matrix(df, symm=False):
       v = df[df[cn.LEG_ID] == v_id]
       u = make_lines(u)
       v = make_lines(v)
+
       # if symm:
       #     distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
       # else:
