@@ -7,6 +7,7 @@ import utils.config as config
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from statistics import mean
+import math
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -18,7 +19,6 @@ def find_best_fit(xs, ys):
   m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs) * mean(xs) - mean(xs * xs))
   # find intercept
   c = mean(ys) - m * mean(xs)
-  
   x = []
   y = []
   # Take first and last points t c
@@ -61,18 +61,45 @@ def make_lines(df):
 
         line = find_best_fit(xs, ys)
         lines.append(line)
-        # x1, y1 = line["p1"]
-        # x2, y2 = line["p2"]
-        # x = [ x1, x2 ]
-        # y = [ y1, y2 ]
-        # plt.scatter(xs, ys)
-        # plt.plot(x, y)
-        # plt.show() 
     return lines
 
+def distance_between_two_points(p1, p2):
+  return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+def compute_MLHD(lines_M, lines_N): 
+  log.info("M has {} lines".format(len(lines_M)))
+  log.info("N has {} lines".format(len(lines_N)))
+
+  xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
+  ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
+  
+  xn = [n["p1"][0] for n in lines_N] + [n["p2"][0] for n in lines_N]
+  yn = [n["p1"][1] for n in lines_N] + [n["p2"][1] for n in lines_N]
+
+  # find Rm
+  x_min = min(xm)
+  x_max = max(xm)
+  y_min = min(ym)
+  y_max = max(ym)
+  Rm = distance_between_two_points((x_min, y_min), (x_max, y_max)) / 2
+  total_M_length = 0
+  total_prod_of_length_distance = 0
+  for m in lines_M:
+    m_length = distance_between_two_points(m["p1"], m["p2"])
+    total_M_length += m_length
+    # N_neighbor = within_neighborhood(m, Rm, lines_N)
+    # d_angle = find_angle_distance(m, N_neighbor)
+    # d_perp = find_perpendicular_distance(m, N_neighbor)
+    # d_parallel = find_parallel_distance(m, N_neighbor)
+    # d_comp = find_compensation_distasnce(m, N_neighbor)
+    # distance = d_angle + d_perp + d_parallel + d_comp
+    # total_prod_of_length_distance += m_length * distance
+  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+  
 def make_MLHD_matrix(df, symm=False):
   leg_ids = df[cn.LEG_ID].unique()
-  n = len(leg_ids)
+  # n = len(leg_ids)
+  n = 1
   distances = np.zeros((n, n))
   for r in range(n):
     for c in range(n):
@@ -82,7 +109,7 @@ def make_MLHD_matrix(df, symm=False):
       v = df[df[cn.LEG_ID] == v_id]
       u = make_lines(u)
       v = make_lines(v)
-
+      distances[r, c] = compute_MLHD(u, v)
       # if symm:
       #     distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
       # else:
