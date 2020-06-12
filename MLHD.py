@@ -61,19 +61,19 @@ def make_lines(df):
         lines.append(line)
     return lines
 
-def angle_distance_btw_two_lines(l1, l2):
+def angle_distance_btw_two_lines(lm, ln):
   """
     Calculates the angle distance between two lines.
     The smallest positive intersecting angle between the two lines is calculated by using the gradient of the two lines.
-    :param l1: line1, l2: line2
+    :param lm: line1, ln: line2
     :return: angle distance between two lines
   """
-  m1 = l1["m"]
-  m2 = l2["m"]
-  l1_length = lf.distance_between_two_points(l1["p1"], l1["p2"])
-  l2_length = lf.distance_between_two_points(l2["p1"], l2["p2"])
+  m1 = lm["m"]
+  m2 = ln["m"]
+  lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
+  ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
   angle = math.degrees(math.atan(abs((m2 - m1)/(1 + m1 * m2))))
-  return min(l1_length, l2_length) * math.sin(angle)
+  return min(lm_length, ln_length) * math.sin(angle)
 
 def perpendicular_distance_btw_two_lines(lm, ln):
   lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
