@@ -90,6 +90,18 @@ def parallel_distance_btw_two_lines(lm, ln):
     return lf.get_parallel_distance(lm, ln)
   return lf.get_parallel_distance(ln, lm)
 
+def collective_parallel_distance(lm, N_lines):
+  """
+    Calculates the parallel distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: parallel distance between a line and the set of neighboring lines
+  """
+  min_parallel = parallel_distance_btw_two_lines(lm, N_lines[0])
+  for ln in N_lines:
+    parallel_dist = parallel_distance_btw_two_lines(lm, ln)
+    min_parallel = min(min_parallel, parallel_dist)
+  return min_parallel
+
 def compute_MLHD(lines_M, lines_N): 
   log.info("M has {} lines".format(len(lines_M)))
   log.info("N has {} lines".format(len(lines_N)))
@@ -113,10 +125,10 @@ def compute_MLHD(lines_M, lines_N):
     total_M_length += m_length
     # perpendicular_distance_btw_two_lines(m, lines_N[0])
     # N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
-    # d_angle = find_angle_distance(m, N_neighbor)
-    # d_perp = find_perpendicular_distance(m, N_neighbor)
-    # d_parallel = find_parallel_distance(m, N_neighbor)
-    # d_comp = find_compensation_distasnce(m, N_neighbor)
+    # d_angle = collective_angle_distance(m, N_neighbor)
+    # d_perp = collective_perpendicular_distance(m, N_neighbor)
+    # d_parallel = collective_parallel_distance(m, N_neighbor)
+    # d_comp = collective_compensation_distasnce(m, N_neighbor)
     # distance = d_angle + d_perp + d_parallel + d_comp
     # total_prod_of_length_distance += m_length * distance
   return 1/Rm * 1/total_M_length * total_prod_of_length_distance
