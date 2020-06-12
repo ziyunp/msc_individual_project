@@ -81,7 +81,14 @@ def perpendicular_distance_btw_two_lines(lm, ln):
   if ln_length >= lm_length:
     return lf.get_perpendicular_distance(lm, ln)
   perp_distance = lf.get_perpendicular_distance(ln, lm)
-  return ln_length / lm_length * perp_distance
+  return (ln_length / lm_length) * perp_distance
+
+def parallel_distance_btw_two_lines(lm, ln):
+  lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
+  ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
+  if ln_length >= lm_length:
+    return lf.get_parallel_distance(lm, ln)
+  return lf.get_parallel_distance(ln, lm)
 
 def compute_MLHD(lines_M, lines_N): 
   log.info("M has {} lines".format(len(lines_M)))
