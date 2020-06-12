@@ -124,6 +124,21 @@ def collective_parallel_distance(lm, N_lines):
     min_parallel = min(min_parallel, parallel_dist)
   return min_parallel
 
+def collective_compensation_distance(lm, N_lines):
+  """
+    Calculates the compensation distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: compensation distance between a line and the set of neighboring lines
+  """
+  m_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
+  total_N_lengths = 0
+  for ln in N_lines:
+    total_N_lengths += lf.distance_between_two_points(ln["p1"], ln["p2"])
+  diff = m_length - total_N_lengths
+  if diff < 0:
+    return 0
+  return diff
+
 def compute_MLHD(lines_M, lines_N): 
   log.info("M has {} lines".format(len(lines_M)))
   log.info("N has {} lines".format(len(lines_N)))
