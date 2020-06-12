@@ -12,6 +12,12 @@ def construct_line(point1, point2, m, c):
   return { "p1": point1, "p2": point2, "m": m, "c": c }
 
 def get_perpendicular_distance(shorter_line, longer_line):
+  """
+    Rotate shorter_line around the midpoint so that it is parallel to the longer_line, and get the perpendicular distance between rotated lines
+    1. get midpoint and perpendicular gradient
+    2. construct a line with the midpoint and the intersection point on ln 
+    3. get length of the line
+  """
   parallel_m = longer_line["m"]
   c_longer = longer_line["c"]
   mid_x, mid_y = midpoint(shorter_line)

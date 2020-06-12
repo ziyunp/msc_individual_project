@@ -79,10 +79,6 @@ def perpendicular_distance_btw_two_lines(lm, ln):
   lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
   ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
   if ln_length >= lm_length:
-    # rotate lm around the midpoint so that it is parallel to ln, and get the perpendicular distance between rotated lm and ln
-    # 1. get midpoint and perpendicular gradient
-    # 2. construct a line with the midpoint and the intersection point on ln 
-    # 3. get length of the line
     return lf.get_perpendicular_distance(lm, ln)
   perp_distance = lf.get_perpendicular_distance(ln, lm)
   return ln_length / lm_length * perp_distance
