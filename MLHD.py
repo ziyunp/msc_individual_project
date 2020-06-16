@@ -69,23 +69,19 @@ def angle_distance_btw_two_lines(lm, ln):
   """
   m1 = lm["m"]
   m2 = ln["m"]
-  lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
-  ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
   angle = math.degrees(math.atan(abs((m2 - m1)/(1 + m1 * m2))))
-  return min(lm_length, ln_length) * math.sin(angle)
+  return min(lm["len"], ln["len"]) * math.sin(angle)
 
 def perpendicular_distance_btw_two_lines(lm, ln):
-  lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
-  ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
+  lm_length = lm["len"]
+  ln_length = ln["len"]
   if ln_length >= lm_length:
     return lf.get_perpendicular_distance(lm, ln)
   perp_distance = lf.get_perpendicular_distance(ln, lm)
   return (ln_length / lm_length) * perp_distance
 
 def parallel_distance_btw_two_lines(lm, ln):
-  lm_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
-  ln_length = lf.distance_between_two_points(ln["p1"], ln["p2"])
-  if ln_length >= lm_length:
+  if ln["len"] >= lm["len"]:
     return lf.get_parallel_distance(lm, ln)
   return lf.get_parallel_distance(ln, lm)
 
@@ -129,27 +125,27 @@ def collective_compensation_distance(lm, N_lines):
     :param lm: line, N_lines: the set of neighboring lines of lm
     :return: compensation distance between a line and the set of neighboring lines
   """
-  m_length = lf.distance_between_two_points(lm["p1"], lm["p2"])
   total_N_lengths = 0
   for ln in N_lines:
-    total_N_lengths += lf.distance_between_two_points(ln["p1"], ln["p2"])
-  diff = m_length - total_N_lengths
+    total_N_lengths += ln["len"]
+  diff = lm["len"] - total_N_lengths
   if diff < 0:
     return 0
   return diff
 
-def within_neighborhood(m, m_length, Rm, lines_N):
+def within_neighborhood(lm, Rm, lines_N):
+  m_length = lm["len"]
   perp_distances = {}
   for i in range(len(lines_N)):
-    perp_distances[i] = perpendicular_distance_btw_two_lines(m, lines_N[i])
+    perp_distances[i] = perpendicular_distance_btw_two_lines(lm, lines_N[i])
   sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
   total_N_length = 0
   n_of_lines = 0
   for d in sorted_perp_distances:
     index = d[0]
     perp_distance = d[1]
-    n = lines_N[index]
-    length = lf.distance_between_two_points(n["p1"], n["p2"])
+    ln = lines_N[index]
+    length = ln["len"]
     total_N_length += length
     n_of_lines += 1
     if n_of_lines > 1:
@@ -173,17 +169,16 @@ def compute_MLHD(lines_M, lines_N):
   x_max = max(xm)
   y_min = min(ym)
   y_max = max(ym)
-  Rm = lf.distance_between_two_points((x_min, y_min), (x_max, y_max)) / 2
+  Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
-  for m in lines_M:
-    m_length = lf.distance_between_two_points(m["p1"], m["p2"])
-    total_M_length += m_length
-    N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
-    d_angle = collective_angle_distance(m, N_neighbor)
-    d_perp = collective_perpendicular_distance(m, N_neighbor)
-    d_parallel = collective_parallel_distance(m, N_neighbor)
-    # d_comp = collective_compensation_distasnce(m, N_neighbor)
+  for lm in lines_M: 
+    total_M_length += lm["len"]
+    N_neighbors = within_neighborhood(lm, Rm, lines_N)
+    d_angle = collective_angle_distance(lm, N_neighbors)
+    d_perp = collective_perpendicular_distance(lm, N_neighbors)
+    d_parallel = collective_parallel_distance(lm, N_neighbors)
+    d_comp = collective_compensation_distance(lm, N_neighbors)
     # distance = d_angle + d_perp + d_parallel + d_comp
     # total_prod_of_length_distance += m_length * distance
   return 1/Rm * 1/total_M_length * total_prod_of_length_distance
