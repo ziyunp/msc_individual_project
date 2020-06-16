@@ -1,4 +1,5 @@
 import math
+import matplotlib.pyplot as plt
 
 def get_midpoint(line):
   x = (line["p1"][0] + line["p2"][0]) / 2
@@ -79,3 +80,15 @@ def determine_left_and_right_ends(point1, point2):
       right = point2
       left = point1
   return left, right
+
+
+def plot_points(xs, ys, c=None):
+  plt.scatter(xs, ys, color=c)
+
+def plot_line(line, c=None):
+  xs = [line["p1"][0]] + [line["p2"][0]]
+  ys = [line["p1"][1]] + [line["p2"][1]]
+  plt.plot(xs, ys, color=c)
+
+def show_plot():
+  plt.show()
