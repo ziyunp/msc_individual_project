@@ -5,7 +5,6 @@ import os
 import utils.column_names as cn
 import utils.config as config
 import utils.line_functions as lf
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from statistics import mean
 import math
@@ -139,6 +138,27 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
+def within_neighborhood(m, m_length, Rm, lines_N):
+  perp_distances = {}
+  for i in range(len(lines_N)):
+    perp_distances[i] = perpendicular_distance_btw_two_lines(m, lines_N[i])
+  sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
+  total_N_length = 0
+  n_of_lines = 0
+  for d in sorted_perp_distances:
+    index = d[0]
+    perp_distance = d[1]
+    n = lines_N[index]
+    length = lf.distance_between_two_points(n["p1"], n["p2"])
+    total_N_length += length
+    n_of_lines += 1
+    if n_of_lines > 1:
+      if abs(perp_distance) > 0.5 * Rm * m_length or total_N_length > m_length:
+        n_of_lines -= 1
+        break
+  filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
+  return [lines_N[i] for i in filtered_indices]
+
 def compute_MLHD(lines_M, lines_N): 
   log.info("M has {} lines".format(len(lines_M)))
   log.info("N has {} lines".format(len(lines_N)))
@@ -148,7 +168,6 @@ def compute_MLHD(lines_M, lines_N):
   
   xn = [n["p1"][0] for n in lines_N] + [n["p2"][0] for n in lines_N]
   yn = [n["p1"][1] for n in lines_N] + [n["p2"][1] for n in lines_N]
-
   # find Rm
   x_min = min(xm)
   x_max = max(xm)
@@ -160,11 +179,10 @@ def compute_MLHD(lines_M, lines_N):
   for m in lines_M:
     m_length = lf.distance_between_two_points(m["p1"], m["p2"])
     total_M_length += m_length
-    # perpendicular_distance_btw_two_lines(m, lines_N[0])
-    # N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
-    # d_angle = collective_angle_distance(m, N_neighbor)
-    # d_perp = collective_perpendicular_distance(m, N_neighbor)
-    # d_parallel = collective_parallel_distance(m, N_neighbor)
+    N_neighbor = within_neighborhood(m, m_length, Rm, lines_N)
+    d_angle = collective_angle_distance(m, N_neighbor)
+    d_perp = collective_perpendicular_distance(m, N_neighbor)
+    d_parallel = collective_parallel_distance(m, N_neighbor)
     # d_comp = collective_compensation_distasnce(m, N_neighbor)
     # distance = d_angle + d_perp + d_parallel + d_comp
     # total_prod_of_length_distance += m_length * distance
