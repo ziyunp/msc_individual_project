@@ -20,19 +20,23 @@ def get_perpendicular_distance(shorter_line, longer_line):
     2. construct a line with the midpoint and the intersection point on ln 
     3. get length of the line
   """
-  parallel_m = longer_line["m"]
-  c_longer = longer_line["c"]
   midpoint = get_midpoint(shorter_line)
-  intersecting_point = find_perpendicular_intersect(parallel_m, c_longer, midpoint)
+  intersecting_point = find_perpendicular_intersect(longer_line, midpoint)
   perp_distance = distance_btw_two_points(midpoint, intersecting_point)
   return perp_distance
 
-def find_perpendicular_intersect(line_m, line_c, point):
+def find_perpendicular_intersect(line, point):
   x, y = point
-  perp_m = -1 / line_m 
+  m = line["m"]
+  c = line["c"]
+  if m == 0:
+    # horizontal line
+    x, y = point
+    return (x, line["p1"][1])
+  perp_m = -1 / m
   c_perp = y - perp_m * x
   # find intersection by equating the eq of longer_line and perp line
-  x_intersect = (c_perp - line_c) / (line_m - perp_m)
+  x_intersect = (c_perp - c) / (m - perp_m)
   y_intersect = perp_m * x_intersect + c_perp
   return (x_intersect, y_intersect)
 
@@ -53,8 +57,8 @@ def get_parallel_distance(shorter_line, longer_line):
   left_longer, right_longer = determine_left_and_right_ends(longer_line["p1"], longer_line["p2"])
 
   # find the intersection point on longer line from the ends of the shorter line
-  left_intersect = find_perpendicular_intersect(m, longer_line["c"], left_shorter)
-  right_intersect = find_perpendicular_intersect(m, longer_line["c"], right_shorter)
+  left_intersect = find_perpendicular_intersect(longer_line, left_shorter)
+  right_intersect = find_perpendicular_intersect(longer_line, right_shorter)
   # find parallel shift
   left_shift = distance_btw_two_points(left_intersect, left_longer)
   right_shift = distance_btw_two_points(right_intersect, right_longer)

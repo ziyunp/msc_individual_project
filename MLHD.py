@@ -16,7 +16,9 @@ PING_INTERVAL = 5
 
 def find_best_fit(xs, ys):
   # find slope
-  m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs) * mean(xs) - mean(xs * xs))
+  if (mean(xs)**2 - mean(xs * xs)) == 0:
+    return "undefined"
+  m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs)** 2 - mean(xs**2))
   # find intercept
   c = mean(ys) - m * mean(xs)
   # Take first and last points t c
@@ -24,7 +26,10 @@ def find_best_fit(xs, ys):
   x2 = xs[-1]
   y1 = m * xs[0] + c
   y2 = m * xs[-1] + c
-  return lf.construct_line((x1,y1), (x2,y2), m, c)
+  line = lf.construct_line((x1,y1), (x2,y2), m, c)
+  if line["len"] == 0:
+    return "undefined"
+  return line
 
 def make_lines(df):
     """
@@ -53,11 +58,11 @@ def make_lines(df):
       else:
         start_time = points.iloc[-1][cn.EVENT_DTTM]
         prev_point = start_time
-        xs = points[cn.EVENT_LAT].to_numpy()
-        ys = points[cn.EVENT_LONG].to_numpy()
-
+        xs = np.array(points[cn.EVENT_LAT], dtype=np.float64)
+        ys = np.array(points[cn.EVENT_LONG], dtype=np.float64)
         line = find_best_fit(xs, ys)
-        lines.append(line)
+        if line != "undefined":
+          lines.append(line)
     return lines
 
 def angle_distance_btw_two_lines(lm, ln):
@@ -156,9 +161,6 @@ def within_neighborhood(lm, Rm, lines_N):
   return [lines_N[i] for i in filtered_indices]
 
 def compute_MLHD(lines_M, lines_N): 
-  log.info("M has {} lines".format(len(lines_M)))
-  log.info("N has {} lines".format(len(lines_N)))
-
   xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
   
@@ -173,23 +175,24 @@ def compute_MLHD(lines_M, lines_N):
   total_M_length = 0
   total_prod_of_length_distance = 0
   for lm in lines_M: 
-    total_M_length += lm["len"]
+    m_length = lm["len"]
+    total_M_length += m_length
     N_neighbors = within_neighborhood(lm, Rm, lines_N)
     d_angle = collective_angle_distance(lm, N_neighbors)
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
     d_comp = collective_compensation_distance(lm, N_neighbors)
-    # distance = d_angle + d_perp + d_parallel + d_comp
-    # total_prod_of_length_distance += m_length * distance
+    distance = d_angle + d_perp + d_parallel + d_comp
+    total_prod_of_length_distance += m_length * distance
   return 1/Rm * 1/total_M_length * total_prod_of_length_distance
   
 def make_MLHD_matrix(df, symm=False):
   leg_ids = df[cn.LEG_ID].unique()
-  # n = len(leg_ids)
-  n = 1
+  n = len(leg_ids)
+  print("n:", n)
   distances = np.zeros((n, n))
   for r in range(n):
-    for c in range(n):
+    for c in range(r+1, n):
       u_id = leg_ids[r]
       v_id = leg_ids[c]
       u = df[df[cn.LEG_ID] == u_id]
@@ -201,7 +204,7 @@ def make_MLHD_matrix(df, symm=False):
       #     distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
       # else:
       #     distances[r, c] = directed_hausdorff(u, v)[0]
-      # distances[c, r] = distances[r, c]
+      distances[c, r] = distances[r, c]
   return distances    
 
 def main():
@@ -217,12 +220,9 @@ def main():
   log.info("There are {} unique from/to combinations".format(len(df_from_to_no_loop)))
 
   log.info("Clustering routes between each pair of sites")
-
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
-    row = df_from_to_no_loop.iloc[0]
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
-    make_MLHD_matrix(df_sub, True)
-
+    distance_matrix = make_MLHD_matrix(df_sub, True)
 
 if __name__ == "__main__":
   main()
