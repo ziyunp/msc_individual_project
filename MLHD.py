@@ -14,23 +14,14 @@ import sys
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
-PING_INTERVAL = 5
-
-def find_best_fit(xs, ys):
-  # find slope
-  if (mean(xs)**2 - mean(xs * xs)) == 0:
+def make_line(point1, point2):
+  x1, y1 = point1
+  x2, y2 = point2
+  if x1 == x2:
     return "undefined"
-  m = (mean(xs) * mean(ys) - mean(xs * ys)) / (mean(xs)** 2 - mean(xs**2))
-  # find intercept
-  c = mean(ys) - m * mean(xs)
-  # Take first and last points t c
-  x1 = xs[0]
-  x2 = xs[-1]
-  y1 = m * xs[0] + c
-  y2 = m * xs[-1] + c
-  line = lf.construct_line((x1,y1), (x2,y2), m, c)
-  if line["len"] == 0:
-    return "undefined"
+  m = (y2 - y1) / (x2 - x1)
+  c = y1 - m * x1
+  line = lf.construct_line(point1, point2, m, c)
   return line
 
 def make_lines(df):
@@ -41,30 +32,15 @@ def make_lines(df):
     :return: list of lines with { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c } representing a line
     """
     lines = []
-    df = df[[cn.LEG_ID, cn.EVENT_LAT, cn.EVENT_LONG, cn.EVENT_DTTM]]
-    
-    # for every 5 min interval, get the set of points and construct a line
-    start_time = df.iloc[0][cn.EVENT_DTTM]
-    end_time = df.iloc[-1][cn.EVENT_DTTM]
-    prev_point = df.iloc[0][cn.EVENT_DTTM]
-
-    while start_time < end_time:
-      last_ping = pd.to_datetime(start_time + pd.Timedelta(PING_INTERVAL, "minute"))
-      
-      lower_bound = prev_point if prev_point < start_time else start_time
-      points = df[(df[cn.EVENT_DTTM] >= lower_bound) & (df[cn.EVENT_DTTM] <= last_ping)]
-
-      if len(points) < 2:
-        prev_point = start_time
-        start_time = last_ping
-      else:
-        start_time = points.iloc[-1][cn.EVENT_DTTM]
-        prev_point = start_time
-        xs = np.array(points[cn.EVENT_LAT], dtype=np.float64)
-        ys = np.array(points[cn.EVENT_LONG], dtype=np.float64)
-        line = find_best_fit(xs, ys)
-        if line != "undefined":
-          lines.append(line)
+    df = df[[cn.EVENT_LAT, cn.EVENT_LONG]].drop_duplicates()
+    for i in range(len(df) - 1):
+      point1 = df.iloc[i]
+      point2 = df.iloc[i + 1]
+      point1 = (point1[cn.EVENT_LAT], point1[cn.EVENT_LONG])
+      point2 = (point2[cn.EVENT_LAT], point2[cn.EVENT_LONG])
+      line = make_line(point1, point2)
+      if line != "undefined":
+        lines.append(line)
     return lines
 
 def angle_distance_btw_two_lines(lm, ln):
