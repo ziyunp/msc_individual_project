@@ -205,10 +205,6 @@ def make_MLHD_matrix(df, symm=False):
       u = make_lines(u)
       v = make_lines(v)
       distances[r, c] = compute_MLHD(u, v)
-      # if symm:
-      #     distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
-      # else:
-      #     distances[r, c] = directed_hausdorff(u, v)[0]
       distances[c, r] = distances[r, c]
   return distances, labels
 
