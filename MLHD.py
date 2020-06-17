@@ -8,6 +8,8 @@ import utils.line_functions as lf
 from tqdm import tqdm
 from statistics import mean
 import math
+import evaluation as ev
+import sys
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -189,9 +191,11 @@ def compute_MLHD(lines_M, lines_N):
 def make_MLHD_matrix(df, symm=False):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
-  print("n:", n)
   distances = np.zeros((n, n))
+  labels = np.zeros(n)
   for r in range(n):
+    data = df[df[cn.LEG_ID] == leg_ids[r]]
+    labels[r] = data[cn.CLUSTER].unique()
     for c in range(r+1, n):
       u_id = leg_ids[r]
       v_id = leg_ids[c]
@@ -205,7 +209,7 @@ def make_MLHD_matrix(df, symm=False):
       # else:
       #     distances[r, c] = directed_hausdorff(u, v)[0]
       distances[c, r] = distances[r, c]
-  return distances    
+  return distances, labels
 
 def main():
   data_file = config.FILENAMES["all_data_cleaned"]
@@ -219,10 +223,21 @@ def main():
   df_from_to_no_loop.dropna(inplace=True)
   log.info("There are {} unique from/to combinations".format(len(df_from_to_no_loop)))
 
+  orig_stdout = sys.stdout
+  f = open('distance_silhouette.csv', 'w')
+  sys.stdout = f
+
   log.info("Clustering routes between each pair of sites")
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
+    print(row.from_depot, "-", row.to_depot)
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
-    distance_matrix = make_MLHD_matrix(df_sub, True)
+    distance_matrix, labels = make_MLHD_matrix(df_sub, True)
+    print(distance_matrix)
+    silhouette = ev.silhouette_score(labels, distance_matrix)
+    print("silhouette score: ", silhouette)
+  
+  sys.stdout = orig_stdout
+  f.close()
 
 if __name__ == "__main__":
   main()
