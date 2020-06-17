@@ -144,7 +144,8 @@ def within_neighborhood(lm, Rm, lines_N):
   m_length = lm["len"]
   perp_distances = {}
   for i in range(len(lines_N)):
-    perp_distances[i] = perpendicular_distance_btw_two_lines(lm, lines_N[i])
+    perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
+  # sort by absolute perpendicular distance
   sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
   total_N_length = 0
   n_of_lines = 0
@@ -156,7 +157,7 @@ def within_neighborhood(lm, Rm, lines_N):
     total_N_length += length
     n_of_lines += 1
     if n_of_lines > 1:
-      if abs(perp_distance) > 0.5 * Rm * m_length or total_N_length > m_length:
+      if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
         n_of_lines -= 1
         break
   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
