@@ -74,7 +74,7 @@ def angle_distance_btw_two_lines(lm, ln):
   """
   m1 = lm["m"]
   m2 = ln["m"]
-  angle = math.degrees(math.atan(abs((m2 - m1)/(1 + m1 * m2))))
+  angle = math.atan(abs((m2 - m1)/(1 + m1 * m2)))
   return min(lm["len"], ln["len"]) * math.sin(angle)
 
 def perpendicular_distance_btw_two_lines(lm, ln):
