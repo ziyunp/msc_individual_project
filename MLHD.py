@@ -17,6 +17,7 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 def make_line(point1, point2):
   x1, y1 = point1
   x2, y2 = point2
+  # TODO: adjust one of the x
   if x1 == x2:
     return "undefined"
   m = (y2 - y1) / (x2 - x1)
@@ -196,21 +197,17 @@ def main():
   df_from_to_no_loop.dropna(inplace=True)
   log.info("There are {} unique from/to combinations".format(len(df_from_to_no_loop)))
 
-  orig_stdout = sys.stdout
-  f = open('distance_silhouette.csv', 'w')
-  sys.stdout = f
-
   log.info("Clustering routes between each pair of sites")
+
+  i = 0
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
-    print(row.from_depot, "-", row.to_depot)
+    i += 1
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
     distance_matrix, labels = make_MLHD_matrix(df_sub, True)
-    print(distance_matrix)
+    save_file = "distance_matrix_" + str(i) + ".csv"
+    np.savetxt(save_file, distance_matrix, delimiter=",")
     silhouette = ev.silhouette_score(labels, distance_matrix)
-    print("silhouette score: ", silhouette)
-  
-  sys.stdout = orig_stdout
-  f.close()
+    print(row.from_depot, "-", row.to_depot, ": ", silhouette)
 
 if __name__ == "__main__":
   main()
