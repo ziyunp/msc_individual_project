@@ -134,7 +134,7 @@ def within_neighborhood(lm, Rm, lines_N):
     total_N_length += length
     n_of_lines += 1
     if n_of_lines > 1:
-      if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
+      if perp_distance > 0.5 * Rm * m_length:
         n_of_lines -= 1
         break
   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
