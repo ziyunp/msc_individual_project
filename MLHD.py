@@ -14,13 +14,16 @@ import sys
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
+OFFSET = 1e-15
+
 def make_line(point1, point2):
   x1, y1 = point1
   x2, y2 = point2
-  # TODO: adjust one of the x
-  if x1 == x2:
-    return "undefined"
-  m = (y2 - y1) / (x2 - x1)
+  diff_x = x2 - x1
+  if diff_x == 0:
+    diff_x = OFFSET
+    x2 += OFFSET
+  m = (y2 - y1) / diff_x
   c = y1 - m * x1
   line = lf.construct_line(point1, point2, m, c)
   return line
@@ -40,8 +43,7 @@ def make_lines(df):
       point1 = (point1[cn.EVENT_LAT], point1[cn.EVENT_LONG])
       point2 = (point2[cn.EVENT_LAT], point2[cn.EVENT_LONG])
       line = make_line(point1, point2)
-      if line != "undefined":
-        lines.append(line)
+      lines.append(line)
     return lines
 
 def angle_distance_btw_two_lines(lm, ln):
@@ -143,9 +145,6 @@ def within_neighborhood(lm, Rm, lines_N):
 def compute_MLHD(lines_M, lines_N): 
   xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
-  
-  xn = [n["p1"][0] for n in lines_N] + [n["p2"][0] for n in lines_N]
-  yn = [n["p1"][1] for n in lines_N] + [n["p2"][1] for n in lines_N]
   # find Rm
   x_min = min(xm)
   x_max = max(xm)
