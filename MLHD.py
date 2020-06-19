@@ -7,7 +7,7 @@ import utils.config as config
 import utils.line_functions as lf
 from tqdm import tqdm
 from statistics import mean
-import math
+from math import sin, atan, pi
 import evaluation as ev
 import sys
 
@@ -41,8 +41,12 @@ def angle_distance_btw_two_lines(lm, ln):
   """
   m1 = lm["m"]
   m2 = ln["m"]
-  angle = math.atan(abs((m2 - m1)/(1 + m1 * m2)))
-  return min(lm["len"], ln["len"]) * math.sin(angle)
+  if m1 * m2 == -1:
+    # perpendicular line
+    angle = pi / 2
+  else: 
+    angle = atan(abs((m2 - m1)/(1 + m1 * m2)))
+  return min(lm["len"], ln["len"]) * sin(angle)
 
 def perpendicular_distance_btw_two_lines(lm, ln):
   lm_length = lm["len"]

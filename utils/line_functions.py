@@ -1,4 +1,4 @@
-import math
+from math import sin, cos, asin, sqrt, radians
 import matplotlib.pyplot as plt
 
 OFFSET = 1e-15
@@ -9,7 +9,21 @@ def get_midpoint(line):
   return (x, y)
 
 def distance_btw_two_points(p1, p2):
-  return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+    """
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    """
+    x1, y1 = p1
+    x2, y2 = p2
+    # convert decimal degrees to radians 
+    x1, y1, x2, y2 = map(radians, [x1, y1, x2, y2])
+    # haversine formula 
+    dy = y2 - y1 
+    dx = x2 - x1 
+    a = sin(dx/2)**2 + cos(x1) * cos(x2) * sin(dy/2)**2
+    c = 2 * asin(sqrt(a)) 
+    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+    return c * r
 
 def construct_line(point1, point2):
   length = distance_btw_two_points(point1, point2)
@@ -56,8 +70,8 @@ def get_parallel_distance(shorter_line, longer_line):
   mid_x, mid_y = get_midpoint(shorter_line)
   c = mid_y - m * mid_x
   # find points at two ends = half the distance from midpoint
-  x1 = mid_x - (d/2) / math.sqrt(1 + m**2)
-  x2 = mid_x + (d/2) / math.sqrt(1 + m**2)
+  x1 = mid_x - (d/2) / sqrt(1 + m**2)
+  x2 = mid_x + (d/2) / sqrt(1 + m**2)
   y1 = m * x1 + c
   y2 = m * x2 + c
   left_shorter = (x1, y1)
