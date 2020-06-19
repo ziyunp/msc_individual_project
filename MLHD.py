@@ -14,20 +14,6 @@ import sys
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
-OFFSET = 1e-15
-
-def make_line(point1, point2):
-  x1, y1 = point1
-  x2, y2 = point2
-  diff_x = x2 - x1
-  if diff_x == 0:
-    diff_x = OFFSET
-    x2 += OFFSET
-  m = (y2 - y1) / diff_x
-  c = y1 - m * x1
-  line = lf.construct_line(point1, point2, m, c)
-  return line
-
 def make_lines(df):
     """
     Takes in a dataframe with the lat/lon points in Event_Lat and Event_Long columns
@@ -42,7 +28,7 @@ def make_lines(df):
       point2 = df.iloc[i + 1]
       point1 = (point1[cn.EVENT_LAT], point1[cn.EVENT_LONG])
       point2 = (point2[cn.EVENT_LAT], point2[cn.EVENT_LONG])
-      line = make_line(point1, point2)
+      line = lf.construct_line(point1, point2)
       lines.append(line)
     return lines
 

@@ -1,6 +1,8 @@
 import math
 import matplotlib.pyplot as plt
 
+OFFSET = 1e-15
+
 def get_midpoint(line):
   x = (line["p1"][0] + line["p2"][0]) / 2
   y = (line["p1"][1] + line["p2"][1]) / 2
@@ -9,8 +11,16 @@ def get_midpoint(line):
 def distance_btw_two_points(p1, p2):
   return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
-def construct_line(point1, point2, m, c):
+def construct_line(point1, point2):
   length = distance_btw_two_points(point1, point2)
+  x1, y1 = point1
+  x2, y2 = point2
+  diff_x = x2 - x1
+  if diff_x == 0:
+    diff_x = OFFSET
+    x2 += OFFSET
+  m = (y2 - y1) / diff_x
+  c = y1 - m * x1
   return { "p1": point1, "p2": point2, "m": m, "c": c, "len": length }
 
 def get_perpendicular_distance(shorter_line, longer_line):
