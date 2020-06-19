@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 
 OFFSET = 1e-15
 
-def get_midpoint(line):
-  x = (line["p1"][0] + line["p2"][0]) / 2
-  y = (line["p1"][1] + line["p2"][1]) / 2
+def get_midpoint(p1, p2):
+  x = (p1[0] + p2[0]) / 2
+  y = (p1[1] + p2[1]) / 2
   return (x, y)
 
 def distance_btw_two_points(p1, p2):
@@ -35,7 +35,8 @@ def construct_line(point1, point2):
     x2 += OFFSET
   m = (y2 - y1) / diff_x
   c = y1 - m * x1
-  return { "p1": point1, "p2": point2, "m": m, "c": c, "len": length }
+  midpoint = get_midpoint(point1, point2)
+  return { "p1": point1, "p2": point2, "m": m, "c": c, "len": length, "midpoint": midpoint }
 
 def get_perpendicular_distance(shorter_line, longer_line):
   """
@@ -44,7 +45,7 @@ def get_perpendicular_distance(shorter_line, longer_line):
     2. construct a line with the midpoint and the intersection point on ln 
     3. get length of the line
   """
-  midpoint = get_midpoint(shorter_line)
+  midpoint = shorter_line["midpoint"]
   intersecting_point = find_perpendicular_intersect(longer_line, midpoint)
   perp_distance = distance_btw_two_points(midpoint, intersecting_point)
   return perp_distance
@@ -67,7 +68,7 @@ def find_perpendicular_intersect(line, point):
 def get_parallel_distance(shorter_line, longer_line):
   d = shorter_line["len"]
   m = longer_line["m"]
-  mid_x, mid_y = get_midpoint(shorter_line)
+  mid_x, mid_y = shorter_line["midpoint"]
   c = mid_y - m * mid_x
   # find points at two ends = half the distance from midpoint
   x1 = mid_x - (d/2) / sqrt(1 + m**2)
