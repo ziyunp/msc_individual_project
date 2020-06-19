@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 OFFSET = 1e-15
 
 def get_midpoint(line):
-  x = (line["p1"][0] + line["p2"][0]) / 2
-  y = (line["p1"][1] + line["p2"][1]) / 2
-  return (x, y)
+  Bx = cos(x2) * cos(y2-y1)
+  By = cos(x2) * sin(y2-y1)
+  xm = atan2(sin(x1) + sin(x2), sqrt((cos(x1)+Bx)**2 + By**2))
+  ym = y1 + atan2(By, cos(x1) + Bx)
+  return (xm, ym)
 
 def distance_btw_two_points(p1, p2):
     """
