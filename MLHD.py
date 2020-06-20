@@ -5,11 +5,13 @@ import os
 import utils.column_names as cn
 import utils.config as config
 import utils.line_functions as lf
+import utils.tree as tree
 from tqdm import tqdm
 from statistics import mean
-from math import sin, atan, pi
+from math import sin, atan, pi, floor
 import evaluation as ev
 import sys
+import pickle
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -30,7 +32,7 @@ def make_lines(df):
       point2 = (point2[cn.EVENT_LAT], point2[cn.EVENT_LONG])
       line = lf.construct_line(point1, point2)
       lines.append(line)
-    return lines
+    return np.asarray(lines)
 
 def angle_distance_btw_two_lines(lm, ln):
   """
@@ -109,30 +111,16 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
-def within_neighborhood(lm, Rm, lines_N):
-  m_length = lm["len"]
-  perp_distances = {}
-  for i in range(len(lines_N)):
-    perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
-  # sort by absolute perpendicular distance
-  sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
-  total_N_length = 0
-  n_of_lines = 0
-  for d in sorted_perp_distances:
-    index = d[0]
-    perp_distance = d[1]
-    ln = lines_N[index]
-    length = ln["len"]
-    total_N_length += length
-    n_of_lines += 1
-    if n_of_lines > 1:
-      if perp_distance > 0.5 * Rm * m_length:
-        n_of_lines -= 1
-        break
-  filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
-  return [lines_N[i] for i in filtered_indices]
+def within_neighborhood(lm, lines_N, tree_N, Rm):
+  index = tree_N.query_radius([lm["midpoint"]], r=lm["len"])
+  if len(index[0]) == 0:
+    index = tree_N.query([lm["midpoint"]], return_distance=False, k=2)
+  nearest_lines = []
+  for i in index[0]:
+    nearest_lines.append(lines_N[i])
+  return nearest_lines
 
-def compute_MLHD(lines_M, lines_N): 
+def compute_MLHD(lines_M, lines_N, tree_N): 
   xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
   # find Rm
@@ -146,7 +134,7 @@ def compute_MLHD(lines_M, lines_N):
   for lm in lines_M: 
     m_length = lm["len"]
     total_M_length += m_length
-    N_neighbors = within_neighborhood(lm, Rm, lines_N)
+    N_neighbors = within_neighborhood(lm, lines_N, tree_N, Rm)
     d_angle = collective_angle_distance(lm, N_neighbors)
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
@@ -155,22 +143,36 @@ def compute_MLHD(lines_M, lines_N):
     total_prod_of_length_distance += m_length * distance
   return 1/Rm * 1/total_M_length * total_prod_of_length_distance
   
-def make_MLHD_matrix(df, symm=False):
+def make_MLHD_matrix(df, saved=False):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
   distances = np.zeros((n, n))
   labels = np.zeros(n)
+  # for every leg, make lines and create a ball tree
+  filename = 'trees_and_lines_' + leg_ids[0] + '.dictionary'
+  if not saved:
+    trees_and_lines = {}
+    for id in leg_ids:
+      data = df[df[cn.LEG_ID] == id]
+      lines = make_lines(data)
+      ball_tree = tree.construct_balltree(lines)
+      trees_and_lines[id] = { "lines": lines, "tree": ball_tree }
+    with open(filename, 'wb') as trees_and_lines_file:
+      pickle.dump(trees_and_lines, trees_and_lines_file)
+  else:
+    with open(filename, 'rb') as trees_and_lines_file:
+      trees_and_lines = pickle.load(trees_and_lines_file)
+ 
   for r in range(n):
-    data = df[df[cn.LEG_ID] == leg_ids[r]]
+    u_id = leg_ids[r]
+    data = df[df[cn.LEG_ID] == u_id]
     labels[r] = data[cn.CLUSTER].unique()
     for c in range(r+1, n):
-      u_id = leg_ids[r]
       v_id = leg_ids[c]
-      u = df[df[cn.LEG_ID] == u_id]
-      v = df[df[cn.LEG_ID] == v_id]
-      u = make_lines(u)
-      v = make_lines(v)
-      distances[r, c] = compute_MLHD(u, v)
+      u = trees_and_lines[u_id]["lines"]
+      v = trees_and_lines[v_id]["lines"]
+      v_tree = trees_and_lines[v_id]["tree"]
+      distances[r, c] = compute_MLHD(u, v, v_tree)
       distances[c, r] = distances[r, c]
   return distances, labels
 
