@@ -9,6 +9,7 @@ from tqdm import tqdm
 from sklearn.neighbors import NearestNeighbors
 import sys
 import plot_kdist as plot
+import evaluation as ev
 
 """
   Eps values showed by k-dist plot:
@@ -36,7 +37,10 @@ def make_hausdorff_matrix(df, symm=False):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
   distances = np.zeros((n, n))
+  labels = np.zeros(n)
   for r in range(n):
+    data = df[df[cn.LEG_ID] == leg_ids[r]]
+    labels[r] = data[cn.CLUSTER].unique()
     for c in range(r + 1, n):
       u_id = leg_ids[r]
       v_id = leg_ids[c]
@@ -49,7 +53,7 @@ def make_hausdorff_matrix(df, symm=False):
       else:
           distances[r, c] = directed_hausdorff(u, v)[0]
       distances[c, r] = distances[r, c]
-  return distances    
+  return distances, labels 
 
 
 def main():
@@ -70,8 +74,9 @@ def main():
       df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
       fig = "Fig" + str(count) + ".png"
       count += 1
-      distances = make_hausdorff_matrix(df_sub, True)
-      plot.plot_kdist(distances, fig)
+      distances, labels = make_hausdorff_matrix(df_sub, True)
+      silhouette = ev.silhouette_score(labels, distances)
+      print(row.from_depot, "-", row.to_depot, ": ", silhouette)
 
 if __name__ == "__main__":
   main()
