@@ -28,8 +28,6 @@ def make_lines(df):
     for i in range(len(df) - 1):
       point1 = df.iloc[i]
       point2 = df.iloc[i + 1]
-      point1 = (point1[cn.EVENT_LAT], point1[cn.EVENT_LONG])
-      point2 = (point2[cn.EVENT_LAT], point2[cn.EVENT_LONG])
       line = lf.construct_line(point1, point2)
       lines.append(line)
     return np.asarray(lines)
@@ -111,10 +109,10 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
-def within_neighborhood(lm, lines_N, tree_N, Rm):
+def within_neighborhood(lm, lines_N, tree_N):
   index = tree_N.query_radius([lm["midpoint"]], r=lm["len"])
   if len(index[0]) == 0:
-    index = tree_N.query([lm["midpoint"]], return_distance=False, k=2)
+    index = tree_N.query([lm["midpoint"]], return_distance=False, k=1)
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
@@ -128,20 +126,19 @@ def compute_MLHD(lines_M, lines_N, tree_N):
   x_max = max(xm)
   y_min = min(ym)
   y_max = max(ym)
-  Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
   for lm in lines_M: 
     m_length = lm["len"]
     total_M_length += m_length
-    N_neighbors = within_neighborhood(lm, lines_N, tree_N, Rm)
+    N_neighbors = within_neighborhood(lm, lines_N, tree_N)
     d_angle = collective_angle_distance(lm, N_neighbors)
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
     d_comp = collective_compensation_distance(lm, N_neighbors)
     distance = d_angle + d_perp + d_parallel + d_comp
     total_prod_of_length_distance += m_length * distance
-  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+  return 1/total_M_length * total_prod_of_length_distance
   
 def make_MLHD_matrix(df, saved=False):
   leg_ids = df[cn.LEG_ID].unique()
