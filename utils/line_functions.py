@@ -1,4 +1,4 @@
-from math import sin, cos, asin, sqrt, radians
+from math import sin, cos, asin, sqrt, radians, atan2, pi, degrees
 import matplotlib.pyplot as plt
 
 OFFSET = 1e-15
@@ -111,6 +111,14 @@ def determine_left_and_right_ends(point1, point2):
       left = point1
   return left, right
 
+def bearing(line):
+  x1, y1 = line["p1"]
+  x2, y2 = line["p2"]
+  x1, y1, x2, y2 = map(radians, [x1, y1, x2, y2])
+  y = sin(y2-y1) * cos(x2)
+  x = cos(x1)*sin(x2) - sin(x1)*cos(x2)*cos(y2-y1)
+  angle = atan2(y, x)
+  return (degrees(angle) + 360) % 360
 
 def plot_points(xs, ys, c=None):
   plt.scatter(xs, ys, color=c)

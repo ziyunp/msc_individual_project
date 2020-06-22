@@ -8,7 +8,7 @@ import utils.line_functions as lf
 import utils.tree as tree
 from tqdm import tqdm
 from statistics import mean
-from math import sin, atan, pi, floor
+from math import sin, atan, pi, radians
 import evaluation as ev
 import sys
 import pickle
@@ -31,6 +31,18 @@ def make_lines(df):
       line = lf.construct_line(point1, point2)
       lines.append(line)
     return np.asarray(lines)
+
+def angle_distance_btw_two_lines_bearing(lm, ln):
+  """
+    Experimental: alternative to angle_distance_btw_two_lines
+  """
+  bearing_m = lf.bearing(lm)
+  bearing_n = lf.bearing(ln)
+  if bearing_m > bearing_n:
+    angle = bearing_m - bearing_n
+  else:
+    angle = bearing_n - bearing_m
+  return min(lm["len"], ln["len"]) * sin(radians(angle))
 
 def angle_distance_btw_two_lines(lm, ln):
   """
