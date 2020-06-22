@@ -5,9 +5,7 @@ import utils.column_names as cn
 import utils.config as config
 
 """
-  1. Check if there are two consecutive pings of more than 5 min away
-  2. Construct line segments for every 5 min interval - at least two pings
-
+  Filter legs with two consecutive pings of more than 10 min away
 """
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
