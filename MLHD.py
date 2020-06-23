@@ -142,8 +142,7 @@ def compute_MLHD(lines_M, lines_N, tree_N):
     d_angle = collective_angle_distance(lm, N_neighbors)
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
-    d_comp = collective_compensation_distance(lm, N_neighbors)
-    distance = d_angle + d_perp + d_parallel + d_comp
+    distance = d_angle + d_perp + d_parallel
     total_prod_of_length_distance += m_length * distance
   return 1/total_M_length * total_prod_of_length_distance
   
