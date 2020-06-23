@@ -133,11 +133,6 @@ def within_neighborhood(lm, lines_N, tree_N):
 def compute_MLHD(lines_M, lines_N, tree_N): 
   xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
-  # find Rm
-  x_min = min(xm)
-  x_max = max(xm)
-  y_min = min(ym)
-  y_max = max(ym)
   total_M_length = 0
   total_prod_of_length_distance = 0
   for lm in lines_M: 
