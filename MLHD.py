@@ -81,7 +81,7 @@ def collective_angle_distance(lm, N_lines):
   """
   total_angle_distance = 0
   for ln in N_lines:
-    total_angle_distance += angle_distance_btw_two_lines(lm, ln)
+    total_angle_distance += angle_distance_btw_two_lines_bearing(lm, ln)
   return total_angle_distance
 
 def collective_perpendicular_distance(lm, N_lines):
