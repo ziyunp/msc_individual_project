@@ -30,7 +30,7 @@ def assign_road(data, roads_tree, roads_data):
   road_names = []
   for d, i in zip(distance, indices):
     if d <= ROAD_THRESHOLD:
-      road_names.append(roads_data.iloc[i][cn.ROAD])
+      road_names.append(roads_data.iloc[i][cn.ROAD].to_string(index=False))
     else:
       road_names.append("unknown")
   return road_names
@@ -44,10 +44,8 @@ def fill_in_missing_road(gps_data, roads_data):
   # match unlabelled with roads_data
   road_names = assign_road(unlabelled_pings, roads_tree, roads_data)
   assert len(road_names) == len(unlabelled_pings)
-  # print(road_names)
-  # compare to those labelled and clean 
-  # gps_data.loc[gps_data[cn.ROAD_NAME].isna(), cn.ROAD_NAME] = road_names
-  # print(gps_data)
+  gps_data.loc[gps_data[cn.ROAD_NAME].isna(), cn.ROAD_NAME] = road_names
+  # compare to those labelled and clean   
 
 def main():
   data_file = config.FILENAMES["all_data_with_road_names"] # file stored locally
