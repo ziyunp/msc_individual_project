@@ -158,7 +158,8 @@ def make_MLHD_matrix(df, saved=False):
     for id in leg_ids:
       data = df[df[cn.LEG_ID] == id]
       lines = make_lines(data)
-      ball_tree = tree.construct_balltree(lines)
+      midpoints = np.asarray([np.array(line["midpoint"]) for line in lines])
+      ball_tree = tree.construct_balltree(midpoints)
       trees_and_lines[id] = { "lines": lines, "tree": ball_tree }
     with open(filename, 'wb') as trees_and_lines_file:
       pickle.dump(trees_and_lines, trees_and_lines_file)
