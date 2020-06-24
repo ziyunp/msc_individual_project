@@ -2,7 +2,7 @@ import folium as f
 
 colors = ["red", "blue", "black", "green", "purple", "orange", "darkred", "darkblue", "darkgreen", "gray", "darkpurple"]
 
-def make_map(map_df, cluster_field, save=False, map_file_name="", with_points="False"):
+def make_map(map_df, cluster_field, save=False, map_file_name="", with_points=False):
   m = f.Map()
   m.fit_bounds([[map_df.Event_Lat.min(), map_df.Event_Long.min()],
                 [map_df.Event_Lat.max(), map_df.Event_Long.max()]])
@@ -28,6 +28,48 @@ def make_map(map_df, cluster_field, save=False, map_file_name="", with_points="F
     m.add_child(fg)
   
   f.LayerControl(collapsed=True).add_to(m)
+  if save:
+    print("Saving into {}".format(map_file_name))
+    m.save(outfile=str(map_file_name) + ".html")
+
+  f.LayerControl(collapsed=False).add_to(m)
+  return m
+
+# TODO: sort by event_dttm
+def make_map_with_line_segments(lm, lines_N, distance_label, save=False, map_file_name="", with_points=False):
+  m = f.Map()
+  xm = [lm["p1"][0]] + [lm["p2"][0]]
+  ym = [lm["p1"][1]] + [lm["p2"][1]]
+  xn = [n["p1"][0] for n in lines_N] + [n["p2"][0] for n in lines_N]
+  yn = [n["p1"][1] for n in lines_N] + [n["p2"][1] for n in lines_N]
+
+  x_min = min(xm + xn)
+  x_max = max(xm + xn)
+  y_min = min(ym + yn)
+  y_max = max(ym + yn)
+
+  m.fit_bounds([[x_min, y_min], [x_max, y_max]])
+  # plot lm
+  fg = f.FeatureGroup(name="line_m", overlay=True, control=True)
+  lm_coords = [lm["p1"]] + [lm["p2"]]
+  fg.add_child(f.PolyLine(lm_coords, color=colors[0], popup=str(distance_label)))
+  m.add_child(fg)
+  if with_points:
+    for lat, lon in lm_coords:
+      f.Circle((lat, lon), color=colors[0], radius=10).add_to(f.FeatureGroup(name="line_m").add_to(m))
+
+  # plot lines_N
+  fg = f.FeatureGroup(name="lines_N", overlay=True, control=True)
+  ln_coords = [n["p1"] for n in lines_N] + [n["p2"] for n in lines_N]
+  fg.add_child(f.PolyLine(ln_coords, color=colors[1], popup="ln"))
+  
+  if with_points:
+    for lat, lon in ln_coords:
+      f.Circle((lat, lon), color=colors[1], radius=10).add_to(f.FeatureGroup(name="lines_N").add_to(m))
+
+  m.add_child(fg)
+  f.LayerControl(collapsed=True).add_to(m)
+
   if save:
     print("Saving into {}".format(map_file_name))
     m.save(outfile=str(map_file_name) + ".html")
