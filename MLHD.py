@@ -48,22 +48,6 @@ def angle_distance_btw_two_lines_bearing(lm, ln):
     angle = 360 - angle
   return min(lm["len"], ln["len"]) * sin(radians(angle))
 
-def angle_distance_btw_two_lines(lm, ln):
-  """
-    Calculates the angle distance between two lines.
-    The smallest positive intersecting angle between the two lines is calculated by using the gradient of the two lines.
-    :param lm: line1, ln: line2
-    :return: angle distance between two lines
-  """
-  m1 = lm["m"]
-  m2 = ln["m"]
-  if m1 * m2 == -1:
-    # perpendicular line
-    angle = pi / 2
-  else: 
-    angle = atan(abs((m2 - m1)/(1 + m1 * m2)))
-  return min(lm["len"], ln["len"]) * sin(angle)
-
 def perpendicular_distance_btw_two_lines(lm, ln):
   lm_length = lm["len"]
   ln_length = ln["len"]
