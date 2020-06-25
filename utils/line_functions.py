@@ -1,5 +1,6 @@
 from math import sin, cos, asin, sqrt, radians, atan2, pi, degrees
 import matplotlib.pyplot as plt
+import utils.config as config
 
 OFFSET = 1e-15
 
@@ -22,8 +23,7 @@ def distance_btw_two_points(p1, p2):
     dx = x2 - x1 
     a = sin(dx/2)**2 + cos(x1) * cos(x2) * sin(dy/2)**2
     c = 2 * asin(sqrt(a)) 
-    r = 6371 # Radius of earth in kilometers. Use 3956 for miles
-    return c * r
+    return c * config.CONSTANTS["earth_radius"]
 
 def construct_line(point1, point2):
   length = distance_btw_two_points(point1, point2)
@@ -118,7 +118,7 @@ def bearing(line):
   y = sin(y2-y1) * cos(x2)
   x = cos(x1)*sin(x2) - sin(x1)*cos(x2)*cos(y2-y1)
   angle = atan2(y, x)
-  return (degrees(angle) + 360) % 360
+  return angle
 
 def plot_points(xs, ys, c=None):
   plt.scatter(xs, ys, color=c)

@@ -43,6 +43,9 @@ def angle_distance_btw_two_lines_bearing(lm, ln):
     angle = bearing_m - bearing_n
   else:
     angle = bearing_n - bearing_m
+  # smallest angle
+  if angle > 180:
+    angle = 360 - angle
   return min(lm["len"], ln["len"]) * sin(radians(angle))
 
 def angle_distance_btw_two_lines(lm, ln):
@@ -122,9 +125,9 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
-def within_neighborhood(lm, lines_N, tree_N):
-  # TODO: check length unit, radius seems bigger than length of line
-  index = tree_N.query_radius([lm["midpoint"]], r=lm["len"])
+def within_neighborhood(lm, lines_N, tree_N, Rm):
+  radius = lm["len"] / config.CONSTANTS["earth_radius"]
+  index = tree_N.query_radius([lm["midpoint"]], r=radius)
   if len(index[0]) == 0:
     index = tree_N.query([lm["midpoint"]], return_distance=False, k=1)
   nearest_lines = []
@@ -145,8 +148,9 @@ def compute_MLHD(lines_M, lines_N, tree_N, uid, vid):
     N_neighbors = within_neighborhood(lm, lines_N, tree_N)
     d_angle = collective_angle_distance(lm, N_neighbors)
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
+    d_comp = collective_compensation_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
-    distance = d_angle + d_perp + d_parallel
+    distance = d_angle + d_perp + d_parallel + d_comp
     map_file_name = uid + "-" + vid + str(i) 
     mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
     total_prod_of_length_distance += m_length * distance

@@ -12,3 +12,7 @@ FILENAMES = {
   "test_excl_5km": "{}/20191002-20200130_isotrak_legs_excl_5km_test.csv".format(data_path),
   "roads_data": "{}/roads_data.csv".format(data_path)
 } 
+
+CONSTANTS = {
+  "earth_radius": 6371 # Radius of earth in kilometers. Use 3956 for miles
+}
