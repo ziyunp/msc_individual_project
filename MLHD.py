@@ -33,7 +33,7 @@ def make_lines(df):
       lines.append(line)
     return np.asarray(lines)
 
-def angle_distance_btw_two_lines_bearing(lm, ln):
+def angle_distance_btw_two_lines(lm, ln):
   """
     Experimental: alternative to angle_distance_btw_two_lines
   """
@@ -69,7 +69,7 @@ def collective_angle_distance(lm, N_lines):
   """
   total_angle_distance = 0
   for ln in N_lines:
-    total_angle_distance += angle_distance_btw_two_lines_bearing(lm, ln)
+    total_angle_distance += angle_distance_btw_two_lines(lm, ln)
   return total_angle_distance
 
 def collective_perpendicular_distance(lm, N_lines):
