@@ -125,7 +125,7 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
-def within_neighborhood(lm, lines_N, tree_N, Rm):
+def within_neighborhood(lm, lines_N, tree_N):
   radius = lm["len"] / config.CONSTANTS["earth_radius"]
   index = tree_N.query_radius([lm["midpoint"]], r=radius)
   if len(index[0]) == 0:
@@ -136,8 +136,6 @@ def within_neighborhood(lm, lines_N, tree_N, Rm):
   return nearest_lines
 
 def compute_MLHD(lines_M, lines_N, tree_N, uid, vid): 
-  xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
-  ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
   total_M_length = 0
   total_prod_of_length_distance = 0
   i = 0
