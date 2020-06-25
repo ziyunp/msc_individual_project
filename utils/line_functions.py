@@ -118,7 +118,7 @@ def bearing(line):
   y = sin(y2-y1) * cos(x2)
   x = cos(x1)*sin(x2) - sin(x1)*cos(x2)*cos(y2-y1)
   angle = atan2(y, x)
-  return angle
+  return degrees(angle)
 
 def plot_points(xs, ys, c=None):
   plt.scatter(xs, ys, color=c)
