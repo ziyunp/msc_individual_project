@@ -25,11 +25,15 @@ def make_lines(df):
     :return: list of lines with { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c } representing a line
     """
     lines = []
-    df = df[[cn.EVENT_LAT, cn.EVENT_LONG]].drop_duplicates()
-    for i in range(len(df) - 1):
-      point1 = df.iloc[i]
-      point2 = df.iloc[i + 1]
-      line = lf.construct_line(point1, point2)
+    df_coords = df[[cn.EVENT_LAT, cn.EVENT_LONG]].drop_duplicates()
+    df_filtered = df[df.index.isin(df_coords.index)]
+    for i in range(len(df_coords) - 1):
+      point1 = df_coords.iloc[i]
+      point2 = df_coords.iloc[i + 1]
+      dttm1 = df_filtered.iloc[i][cn.EVENT_DTTM]
+      dttm2 = df_filtered.iloc[i + 1][cn.EVENT_DTTM]
+      avg_dttm = dttm1 + (dttm2 - dttm1) / 2
+      line = lf.construct_line(point1, point2, avg_dttm)
       lines.append(line)
     return np.asarray(lines)
 

@@ -60,6 +60,8 @@ def make_map_with_line_segments(lm, lines_N, distance_label, save=False, map_fil
 
   # plot lines_N
   fg = f.FeatureGroup(name="lines_N", overlay=True, control=True)
+  lines_N = sorted(lines_N, key=lambda x: x["dttm"])
+
   ln_coords = [n["p1"] for n in lines_N] + [n["p2"] for n in lines_N]
   fg.add_child(f.PolyLine(ln_coords, color=colors[1], popup="ln"))
   
