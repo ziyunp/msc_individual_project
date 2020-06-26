@@ -34,9 +34,6 @@ def make_lines(df):
     return np.asarray(lines)
 
 def angle_distance_btw_two_lines(lm, ln):
-  """
-    Experimental: alternative to angle_distance_btw_two_lines
-  """
   bearing_m = lf.bearing(lm)
   bearing_n = lf.bearing(ln)
   if bearing_m > bearing_n:
@@ -110,7 +107,7 @@ def collective_compensation_distance(lm, N_lines):
   return diff
 
 def within_neighborhood(lm, lines_N, tree_N):
-  radius = lm["len"] / config.CONSTANTS["earth_radius"]
+  radius = lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
   index = tree_N.query_radius([lm["midpoint"]], r=radius)
   if len(index[0]) == 0:
     index = tree_N.query([lm["midpoint"]], return_distance=False, k=1)
@@ -133,8 +130,8 @@ def compute_MLHD(lines_M, lines_N, tree_N, uid, vid):
     d_comp = collective_compensation_distance(lm, N_neighbors)
     d_parallel = collective_parallel_distance(lm, N_neighbors)
     distance = d_angle + d_perp + d_parallel + d_comp
-    map_file_name = uid + "-" + vid + str(i) 
-    mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
+    # map_file_name = uid + "-" + vid + str(i) 
+    # mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
     total_prod_of_length_distance += m_length * distance
   return 1/total_M_length * total_prod_of_length_distance
   
@@ -191,8 +188,10 @@ def main():
     i += 1
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
     distance_matrix, labels = make_MLHD_matrix(df_sub, True)
-    save_file = "distance_matrix_" + str(i) + ".csv"
-    np.savetxt(save_file, distance_matrix, delimiter=",")
+    distance_file = config.DATA_FOR_HEATMAP["distance_matrix"] + str(i) + ".csv"
+    labels_file = config.DATA_FOR_HEATMAP["labels"] + str(i) + ".csv"
+    np.savetxt(distance_file, distance_matrix, delimiter=",")
+    np.savetxt(labels_file, labels, delimiter=",")
     silhouette = ev.silhouette_score(labels, distance_matrix)
     print(row.from_depot, "-", row.to_depot, ": ", silhouette)
 
