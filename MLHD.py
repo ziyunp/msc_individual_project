@@ -146,7 +146,7 @@ def within_neighborhood(lm, lines_N, tree_N):
 #   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
 #   return [lines_N[i] for i in filtered_indices]
 
-def compute_MLHD(lines_M, lines_N, tree_N, uid, vid): 
+def compute_MLHD(lines_M, lines_N, tree_N, uid, vid, make_map = False): 
   # # find Rm
   # xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   # ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
@@ -173,11 +173,12 @@ def compute_MLHD(lines_M, lines_N, tree_N, uid, vid):
     d_parallel = collective_parallel_distance(lm, N_neighbors)
     assert d_parallel >= 0
     distance = d_angle + d_perp + d_parallel + d_comp
-    # map_file_name = uid + "-" + vid + str(i) 
-    # mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
+    if make_map:
+      map_file_name = uid + "-" + vid + str(i) 
+      mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
     total_prod_of_length_distance += m_length * distance
-  # return 1/Rm * 1/total_M_length * total_prod_of_length_distance
-  return 1/total_M_length * total_prod_of_length_distance
+  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+  # return 1/total_M_length * total_prod_of_length_distance
 
   
 def make_MLHD_matrix(df, saved=False):
