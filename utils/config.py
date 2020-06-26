@@ -1,7 +1,8 @@
 # TODO:
 # generalise FILENAMES
 data_path = "../data_to_run_code_on" 
-heatmap_data = "../data/MLHD_heatmap"
+heatmap_data = "../data/Heatmap"
+distances = "/distances/distance_matrix_"
 
 FILENAMES = {
   "all_data": "{}/all_training_data_pings_labels_incl_5km.csv".format(data_path),
@@ -15,7 +16,8 @@ FILENAMES = {
 
 DATA_FOR_HEATMAP = {
   "labels": "{}/labels/labels_".format(heatmap_data),
-  "distance_matrix": "{}/distances/distance_matrix_".format(heatmap_data),
+  "basicHD_distances": "{}/basicHD_heatmap{}".format(heatmap_data, distances),
+  "MLHD_distances": "{}/MLHD_heatmap{}".format(heatmap_data, distances)
 }
 
 CONSTANTS = {

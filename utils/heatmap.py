@@ -3,22 +3,32 @@ import numpy as np
 import matplotlib.pyplot as plt
 import config
 
-def main():
+def arrange_matrix_by_cluster(matrix, labels):
+  ordered_indices = np.argsort(labels)
+  length = labels.shape[0]
+  order_rows = np.tile(ordered_indices, (length, 1))
+  ordered_matrix = np.array(list(map(lambda x, y: y[x], order_rows, matrix)))
+  return ordered_matrix[ordered_indices], ordered_indices
+
+def main(HD_type):
   for i in range(1, 10):
     # Get data
-    labels_file = config.DATA_FOR_HEATMAP["labels"]  + str(i) + ".csv"
-    distance_file = config.DATA_FOR_HEATMAP["distance_matrix"] + str(i) + ".csv"
+    labels_file = config.DATA_FOR_HEATMAP["labels"] + str(i) + ".csv"
+    if HD_type == "HD":
+      distance_file = config.DATA_FOR_HEATMAP["basicHD_distances"] + str(i) + ".csv"
+    elif HD_type == "MLHD":
+      distance_file = config.DATA_FOR_HEATMAP["MLHD_distances"] + str(i) + ".csv"
+
     labels = np.loadtxt(labels_file, delimiter=",")
     distance_matrix = np.loadtxt(distance_file, delimiter=",")
+    
     # Rearrange matrix to order legs by cluster
-    ordered_indices = np.argsort(labels)
-    length = labels.shape[0]
-    order_rows = np.tile(ordered_indices, (length, 1))
-    ordered_matrix = np.array(list(map(lambda x, y: y[x], order_rows, distance_matrix)))
-    ordered_matrix = ordered_matrix[ordered_indices]
+    ordered_matrix, ordered_indices = arrange_matrix_by_cluster(distance_matrix, labels)
+
     # Plot heat_map
-    heat_map = plt.imshow(ordered_matrix, cmap="hot", interpolation="nearest")
-    # Label with clusters
+    heat_map = plt.imshow(ordered_matrix, cmap="hot")
+
+    # Label heatmap with cluster labels
     ordered_labels = labels[ordered_indices]
     label_loc = []
     unique_labels = []
@@ -35,4 +45,4 @@ def main():
     plt.show()
 
 if __name__ == "__main__":
-  main()
+  main("HD")
