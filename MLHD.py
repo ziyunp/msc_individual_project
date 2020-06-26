@@ -43,6 +43,9 @@ def angle_distance_btw_two_lines(lm, ln):
   # smallest angle
   if angle > 180:
     angle = 360 - angle
+  if angle > 90:
+    angle = (360 - 2 * angle) / 2
+  assert angle >= 0
   return min(lm["len"], ln["len"]) * sin(radians(angle))
 
 def perpendicular_distance_btw_two_lines(lm, ln):
@@ -116,7 +119,38 @@ def within_neighborhood(lm, lines_N, tree_N):
     nearest_lines.append(lines_N[i])
   return nearest_lines
 
+# def within_neighborhood(lm, lines_N, Rm):
+#   m_length = lm["len"]
+#   perp_distances = {}
+#   for i in range(len(lines_N)):
+#     perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
+#   # sort by absolute perpendicular distance
+#   sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
+#   total_N_length = 0
+#   n_of_lines = 0
+#   for d in sorted_perp_distances:
+#     index = d[0]
+#     perp_distance = d[1]
+#     ln = lines_N[index]
+#     length = ln["len"]
+#     total_N_length += length
+#     n_of_lines += 1
+#     if n_of_lines > 1:
+#       if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
+#         n_of_lines -= 1
+#         break
+#   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
+#   return [lines_N[i] for i in filtered_indices]
+
 def compute_MLHD(lines_M, lines_N, tree_N, uid, vid): 
+  # # find Rm
+  # xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
+  # ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
+  # x_min = min(xm)
+  # x_max = max(xm)
+  # y_min = min(ym)
+  # y_max = max(ym)
+  # Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
   i = 0
@@ -125,15 +159,22 @@ def compute_MLHD(lines_M, lines_N, tree_N, uid, vid):
     m_length = lm["len"]
     total_M_length += m_length
     N_neighbors = within_neighborhood(lm, lines_N, tree_N)
+    # N_neighbors = within_neighborhood(lm, lines_N, Rm)
     d_angle = collective_angle_distance(lm, N_neighbors)
+    assert d_angle >= 0
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
+    assert d_perp >= 0
     d_comp = collective_compensation_distance(lm, N_neighbors)
+    assert d_comp >= 0
     d_parallel = collective_parallel_distance(lm, N_neighbors)
+    assert d_parallel >= 0
     distance = d_angle + d_perp + d_parallel + d_comp
     # map_file_name = uid + "-" + vid + str(i) 
     # mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
     total_prod_of_length_distance += m_length * distance
+  # return 1/Rm * 1/total_M_length * total_prod_of_length_distance
   return 1/total_M_length * total_prod_of_length_distance
+
   
 def make_MLHD_matrix(df, saved=False):
   leg_ids = df[cn.LEG_ID].unique()
@@ -188,8 +229,8 @@ def main():
     i += 1
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
     distance_matrix, labels = make_MLHD_matrix(df_sub, True)
-    distance_file = config.DATA_FOR_HEATMAP["distance_matrix"] + str(i) + ".csv"
-    labels_file = config.DATA_FOR_HEATMAP["labels"] + str(i) + ".csv"
+    distance_file = "distance_matrix_" + str(i) + ".csv"
+    labels_file = "labels_" + str(i) + ".csv"
     np.savetxt(distance_file, distance_matrix, delimiter=",")
     np.savetxt(labels_file, labels, delimiter=",")
     silhouette = ev.silhouette_score(labels, distance_matrix)
