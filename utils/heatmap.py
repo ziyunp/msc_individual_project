@@ -24,6 +24,12 @@ def main(HD_type):
     
     # Rearrange matrix to order legs by cluster
     ordered_matrix, ordered_indices = arrange_matrix_by_cluster(distance_matrix, labels)
+    
+    # Save ordered matrix to file
+    # matrix_file = "ordered_matrix_" + str(i) + ".csv"
+    # indices_file = "ordered_indices_" + str(i) + ".csv"
+    # np.savetxt(matrix_file, ordered_matrix, delimiter=",")
+    # np.savetxt(indices_file, ordered_indices, delimiter=",")
 
     # Plot heat_map
     heat_map = plt.imshow(ordered_matrix, cmap="hot")
@@ -45,4 +51,4 @@ def main(HD_type):
     plt.show()
 
 if __name__ == "__main__":
-  main("HD")
+  main("MLHD")
