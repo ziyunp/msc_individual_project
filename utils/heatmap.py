@@ -1,12 +1,13 @@
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+import config
 
 def main():
   for i in range(1, 10):
     # Get data
-    labels_file = "labels_" + str(i) + ".csv"
-    distance_file = "distance_matrix_" + str(i) + ".csv"
+    labels_file = config.DATA_FOR_HEATMAP["labels"]  + str(i) + ".csv"
+    distance_file = config.DATA_FOR_HEATMAP["distance_matrix"] + str(i) + ".csv"
     labels = np.loadtxt(labels_file, delimiter=",")
     distance_matrix = np.loadtxt(distance_file, delimiter=",")
     # Rearrange matrix to order legs by cluster

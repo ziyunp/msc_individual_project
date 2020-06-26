@@ -1,6 +1,7 @@
 # TODO:
 # generalise FILENAMES
 data_path = "../data_to_run_code_on" 
+heatmap_data = "../data/MLHD_heatmap"
 
 FILENAMES = {
   "all_data": "{}/all_training_data_pings_labels_incl_5km.csv".format(data_path),
@@ -10,8 +11,12 @@ FILENAMES = {
   "labelled_data": "{}/20191002-20200130_isotrak_labelled.csv".format(data_path),
   "labelled_subset": "{}/20191002-20200130_subset_isotrak_labelled.csv".format(data_path),
   "test_excl_5km": "{}/20191002-20200130_isotrak_legs_excl_5km_test.csv".format(data_path),
-  "roads_data": "{}/roads_data.csv".format(data_path)
 } 
+
+DATA_FOR_HEATMAP = {
+  "labels": "{}/labels/labels_".format(heatmap_data),
+  "distance_matrix": "{}/distances/distance_matrix_".format(heatmap_data),
+}
 
 CONSTANTS = {
   "earth_radius": 6371 # Radius of earth in kilometers. Use 3956 for miles
