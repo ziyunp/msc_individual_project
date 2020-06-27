@@ -146,7 +146,7 @@ def within_neighborhood(lm, lines_N, tree_N):
 #   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
 #   return [lines_N[i] for i in filtered_indices]
 
-def compute_MLHD(lines_M, lines_N, tree_N, uid, vid, make_map = False): 
+def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False): 
   # # find Rm
   # xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   # ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
@@ -174,11 +174,11 @@ def compute_MLHD(lines_M, lines_N, tree_N, uid, vid, make_map = False):
     assert d_parallel >= 0
     distance = d_angle + d_perp + d_parallel + d_comp
     if make_map:
-      map_file_name = uid + "-" + vid + str(i) 
-      mm.make_map_with_line_segments(lm, N_neighbors, distance, True, map_file_name, True)
+      map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
+      mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
     total_prod_of_length_distance += m_length * distance
-  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
-  # return 1/total_M_length * total_prod_of_length_distance
+  # return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+  return 1/total_M_length * total_prod_of_length_distance
 
   
 def make_MLHD_matrix(df, saved=False):
@@ -207,11 +207,16 @@ def make_MLHD_matrix(df, saved=False):
     data = df[df[cn.LEG_ID] == u_id]
     labels[r] = data[cn.CLUSTER].unique()
     for c in range(r+1, n):
+      make_map = False
       v_id = leg_ids[c]
       u = trees_and_lines[u_id]["lines"]
       v = trees_and_lines[v_id]["lines"]
       v_tree = trees_and_lines[v_id]["tree"]
-      distances[r, c] = compute_MLHD(u, v, v_tree, u_id, v_id)
+      # Plot a full map
+      if make_map:
+        map_file_name = str(r) + "-" + str(c)
+        mm.make_map_with_line_segments(u, v, True, True, map_file_name, "full")
+      distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
       distances[c, r] = distances[r, c]
   return distances, labels
 
