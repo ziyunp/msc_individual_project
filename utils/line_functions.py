@@ -66,15 +66,19 @@ def find_perpendicular_intersect(line, point):
   return (x_intersect, y_intersect)
 
 def get_parallel_distance(shorter_line, longer_line):
-  d = shorter_line["len"]
+  d = shorter_line["len"] / config.CONSTANTS["earth_radius"]
   m = longer_line["m"]
   mid_x, mid_y = shorter_line["midpoint"]
   c = mid_y - m * mid_x
+  mid_x, mid_y, c = map(radians, [mid_x, mid_y, c])
+
   # find points at two ends = half the distance from midpoint
   x1 = mid_x - (d/2) / sqrt(1 + m**2)
   x2 = mid_x + (d/2) / sqrt(1 + m**2)
   y1 = m * x1 + c
   y2 = m * x2 + c
+  x1, y1, x2, y2 = map(degrees, [x1, y1, x2, y2])
+
   left_shorter = (x1, y1)
   right_shorter = (x2, y2)
 
@@ -107,8 +111,8 @@ def determine_left_and_right_ends(point1, point2):
       left = point1
       right = point2
     else:
-      right = point2
-      left = point1
+      left = point2
+      right = point1
   return left, right
 
 def bearing(line):
