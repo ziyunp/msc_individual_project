@@ -31,4 +31,5 @@ def locate_elbow(distance, figName, k=3):
     y = kth_dist
     kneedle = KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
     kneedle.plot_knee()
+    plt.show()
     return kneedle.elbow_y
