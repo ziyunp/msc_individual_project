@@ -17,7 +17,9 @@ FILENAMES = {
 DATA_FOR_HEATMAP = {
   "labels": "{}/labels/labels_".format(heatmap_data),
   "basicHD_distances": "{}/basicHD_heatmap{}".format(heatmap_data, distances),
-  "MLHD_distances": "{}/MLHD_heatmap{}".format(heatmap_data, distances)
+  "MLHD_distances": "{}/MLHD_heatmap{}".format(heatmap_data, distances),
+  "MLHD_no_length_distances": "{}/MLHD_no_length_restriction{}".format(heatmap_data, distances),
+  "balltree_distances": "{}/balltree_heatmap{}".format(heatmap_data, distances),
 }
 
 CONSTANTS = {

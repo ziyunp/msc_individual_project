@@ -18,7 +18,11 @@ def main(HD_type):
       distance_file = config.DATA_FOR_HEATMAP["basicHD_distances"] + str(i) + ".csv"
     elif HD_type == "MLHD":
       distance_file = config.DATA_FOR_HEATMAP["MLHD_distances"] + str(i) + ".csv"
-
+    elif HD_type == "MLHD_no_length":
+      distance_file = config.DATA_FOR_HEATMAP["MLHD_no_length_distances"] + str(i) + ".csv"
+    elif HD_type == "balltree_lenm": 
+      distance_file = config.DATA_FOR_HEATMAP["balltree_distances"] + str(i) + ".csv"
+      
     labels = np.loadtxt(labels_file, delimiter=",")
     distance_matrix = np.loadtxt(distance_file, delimiter=",")
     
@@ -26,10 +30,10 @@ def main(HD_type):
     ordered_matrix, ordered_indices = arrange_matrix_by_cluster(distance_matrix, labels)
     
     # Save ordered matrix to file
-    # matrix_file = "ordered_matrix_" + str(i) + ".csv"
-    # indices_file = "ordered_indices_" + str(i) + ".csv"
-    # np.savetxt(matrix_file, ordered_matrix, delimiter=",")
-    # np.savetxt(indices_file, ordered_indices, delimiter=",")
+    matrix_file = "ordered_matrix_" + str(i) + ".csv"
+    indices_file = "ordered_indices_" + str(i) + ".csv"
+    np.savetxt(matrix_file, ordered_matrix, delimiter=",")
+    np.savetxt(indices_file, ordered_indices, delimiter=",")
 
     # Plot heat_map
     heat_map = plt.imshow(ordered_matrix, cmap="hot")
@@ -51,4 +55,4 @@ def main(HD_type):
     plt.show()
 
 if __name__ == "__main__":
-  main("MLHD")
+  main("balltree_lenm")
