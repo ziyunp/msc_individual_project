@@ -113,8 +113,8 @@ def collective_compensation_distance(lm, N_lines):
     return 0
   return diff
 
-def within_neighborhood(lm, lines_N, tree_N):
-  radius = lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
+def within_neighborhood(lm, lines_N, tree_N, Rm):
+  radius = 0.5 * Rm * lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
   index = tree_N.query_radius([lm["midpoint"]], r=radius)
   if len(index[0]) == 0:
     index = tree_N.query([lm["midpoint"]], return_distance=False, k=1)
@@ -147,14 +147,14 @@ def within_neighborhood(lm, lines_N, tree_N):
 #   return [lines_N[i] for i in filtered_indices]
 
 def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False): 
-  # # find Rm
-  # xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
-  # ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
-  # x_min = min(xm)
-  # x_max = max(xm)
-  # y_min = min(ym)
-  # y_max = max(ym)
-  # Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
+  # find Rm
+  xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
+  ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
+  x_min = min(xm)
+  x_max = max(xm)
+  y_min = min(ym)
+  y_max = max(ym)
+  Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
   i = 0
@@ -162,7 +162,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     i += 1
     m_length = lm["len"]
     total_M_length += m_length
-    N_neighbors = within_neighborhood(lm, lines_N, tree_N)
+    N_neighbors = within_neighborhood(lm, lines_N, tree_N, Rm)
     # N_neighbors = within_neighborhood(lm, lines_N, Rm)
     d_angle = collective_angle_distance(lm, N_neighbors)
     assert d_angle >= 0
@@ -177,8 +177,8 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
     total_prod_of_length_distance += m_length * distance
-  # return 1/Rm * 1/total_M_length * total_prod_of_length_distance
-  return 1/total_M_length * total_prod_of_length_distance
+  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+  # return 1/total_M_length * total_prod_of_length_distance
 
   
 def make_MLHD_matrix(df, saved=False):
@@ -212,11 +212,11 @@ def make_MLHD_matrix(df, saved=False):
       u = trees_and_lines[u_id]["lines"]
       v = trees_and_lines[v_id]["lines"]
       v_tree = trees_and_lines[v_id]["tree"]
+      distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
       # Plot a full map
       if make_map:
-        map_file_name = str(r) + "-" + str(c)
-        mm.make_map_with_line_segments(u, v, True, True, map_file_name, "full")
-      distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
+        map_file_name = "Full_" + str(r) + "-" + str(c)
+        mm.make_map_with_line_segments(u, v, True, True, map_file_name, str(distances[r, c]))
       distances[c, r] = distances[r, c]
   return distances, labels
 
