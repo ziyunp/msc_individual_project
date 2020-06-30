@@ -181,7 +181,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
   # return 1/total_M_length * total_prod_of_length_distance
 
   
-def make_MLHD_matrix(df, saved=False):
+def make_hausdorff_matrix(df, saved=False):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
   distances = np.zeros((n, n))
@@ -219,32 +219,3 @@ def make_MLHD_matrix(df, saved=False):
         mm.make_map_with_line_segments(u, v, True, True, map_file_name, str(distances[r, c]))
       distances[c, r] = distances[r, c]
   return distances, labels
-
-def main():
-  data_file = config.FILENAMES["all_data_cleaned"]
-  log.info("Reading in data with leg_ids from  from {}".format(data_file))
-
-  df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
-
-  log.info("Getting unique from/to RM site combinations that don't arrive and depart at the same place")
-  df_from_to = df[[cn.FROM_DEPOT, cn.TO_DEPOT]].drop_duplicates()
-  df_from_to_no_loop = df_from_to[df_from_to[cn.FROM_DEPOT] != df_from_to[cn.TO_DEPOT]]
-  df_from_to_no_loop.dropna(inplace=True)
-  log.info("There are {} unique from/to combinations".format(len(df_from_to_no_loop)))
-
-  log.info("Clustering routes between each pair of sites")
-
-  i = 0
-  for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
-    i += 1
-    df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
-    distance_matrix, labels = make_MLHD_matrix(df_sub, True)
-    distance_file = "distance_matrix_" + str(i) + ".csv"
-    labels_file = "labels_" + str(i) + ".csv"
-    np.savetxt(distance_file, distance_matrix, delimiter=",")
-    np.savetxt(labels_file, labels, delimiter=",")
-    silhouette = ev.silhouette_score(labels, distance_matrix)
-    print(row.from_depot, "-", row.to_depot, ": ", silhouette)
-
-if __name__ == "__main__":
-  main()
