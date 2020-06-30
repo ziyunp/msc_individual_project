@@ -29,19 +29,19 @@ def make_map(map_df, cluster_field, save=False, map_file_name="", with_points=Fa
   
   f.LayerControl(collapsed=True).add_to(m)
   if save:
-    print("Saving into {}".format(map_file_name))
+    # print("Saving into {}".format(map_file_name))
     m.save(outfile=str(map_file_name) + ".html")
 
   f.LayerControl(collapsed=False).add_to(m)
   return m
 
-def plot_map(coords, fmap, _name, _color, with_points=False, label=""):
+def _plot_map(coords, fmap, _name, _color, with_points=False, label=""):
   fg = f.FeatureGroup(name=_name, overlay=True, control=True)
   fg.add_child(f.PolyLine(coords, color=_color, popup=label))
   fmap.add_child(fg)
   fmap.add_child(fg)
 
-def plot_points(coords, fmap, _color):
+def _plot_points(coords, fmap, _color):
   for lat, lon in coords:
     f.Circle((lat, lon), color=_color, radius=10).add_to(f.FeatureGroup(name="points").add_to(fmap))
 
@@ -65,7 +65,7 @@ def make_map_with_line_segments(lines_M, lines_N, with_points=False, save=False,
   for line in lines_M:
     coords = [line["p1"]] + [line["p2"]]
     lm_coords += coords
-  plot_map(lm_coords, m, "line_M", colors[0], with_points, distance_label)
+  _plot_map(lm_coords, m, "line_M", colors[0], with_points, distance_label)
 
   # plot lines_N
   lines_N = sorted(lines_N, key=lambda x: x["dttm"])
@@ -73,14 +73,14 @@ def make_map_with_line_segments(lines_M, lines_N, with_points=False, save=False,
   for line in lines_N:
     coords = [line["p1"]] + [line["p2"]]
     ln_coords += coords
-  plot_map(ln_coords, m, "line_N", colors[1], with_points, distance_label)
+  _plot_map(ln_coords, m, "line_N", colors[1], with_points, distance_label)
   
   if with_points:
-    plot_points(lm_coords + ln_coords, m, colors[2])
+    _plot_points(lm_coords + ln_coords, m, colors[2])
   f.LayerControl(collapsed=True).add_to(m)
 
   if save:
-    print("Saving into {}".format(map_file_name))
+    # print("Saving into {}".format(map_file_name))
     m.save(outfile=str(map_file_name) + ".html")
 
   f.LayerControl(collapsed=False).add_to(m)
