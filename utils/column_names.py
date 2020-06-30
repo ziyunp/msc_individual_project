@@ -44,6 +44,7 @@ OS_N = "N"
 
 # Generated columns
 CLUSTER = 'cluster'
+ASSIGNED_CLUSTER = 'assigned_cluster'
 ROAD = 'road'
 ROAD_NAME = 'road_name'
 NEXT_ROAD = 'next_road'

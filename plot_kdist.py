@@ -22,7 +22,6 @@ def save_kdist_plot(distance, figName, k = 3):
     log.info("Saved k-dist plot to {}".format(figName))  
 
 def locate_elbow(distance, figName, k=3):
-    log.info("Locating elbow...")
     nbrs = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='precomputed').fit(distance)
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
@@ -31,5 +30,5 @@ def locate_elbow(distance, figName, k=3):
     y = kth_dist
     kneedle = KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
     kneedle.plot_knee()
-    plt.show()
+    # plt.show()
     return kneedle.elbow_y
