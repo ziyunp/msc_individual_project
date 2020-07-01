@@ -24,7 +24,8 @@ def locate_elbow(distance, figName, k=3):
         y = y_data[x_start:]
         kneedle = KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
         # TODO: should we take the last value in y as an elbow value? - the furthest distance from kth neighbours => will include all points
-        elbows.append(kneedle.elbow_y)
+        if kneedle.elbow_y != None:
+            elbows.append(kneedle.elbow_y)
         x_start = kneedle.elbow
         elbows_x.append(kneedle.elbow)
         # kneedle.plot_knee()

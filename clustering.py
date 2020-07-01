@@ -20,26 +20,60 @@ import MLHD
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
-def apply_dbscan(df, distances, eps, min_samples):
+# def assign_noise_to_cluster(df):
+#   last_index = df[cn.ASSIGNED_CLUSTER].max()
+#   if len(df[df[cn.ASSIGNED_CLUSTER] == -1]) > 0:
+#     # Noise points are given a cluster label each
+#     for index, row in df.iterrows():
+#       if row[cn.ASSIGNED_CLUSTER] == -1:
+#         last_index += 1
+#         df.iloc[index][cn.ASSIGNED_CLUSTER] = last_index
+        
+#   return df
+
+def apply_dbscan(df, distances, eps, min_samples, used_labels):
   leg_ids = df[cn.LEG_ID].unique()
   clustering = DBSCAN(eps=eps, min_samples=min_samples, metric="precomputed").fit(distances)
-  
-  db_clusters = defaultdict(list)
+  max_used_labels = max(used_labels)
+  if max_used_labels != -1:
+    for i, lbl in enumerate(clustering.labels_):
+      if lbl != -1:
+        clustering.labels_[i] += max_used_labels + 1
   # for every cluster, append the leg_id to the list of legs that belong to a cluster
+  db_clusters = defaultdict(list)
   for i, cluster_number in enumerate(clustering.labels_):
-      leg_id = leg_ids[i]
-      db_clusters[cluster_number].append(leg_id)
+    leg_id = leg_ids[i]
+    db_clusters[cluster_number].append(leg_id)
   return db_clusters
 
-def cluster(df, distances, eps, min_samples = 1):
-  db_clusters = apply_dbscan(df, distances, eps, min_samples)
+def cluster(df, distances, eps, min_samples = 2):
+  leg_ids = df[cn.LEG_ID].unique()
+  df_clustered = df[df[cn.ASSIGNED_CLUSTER] != -1]
+  df_unclustered = df[df[cn.ASSIGNED_CLUSTER] == -1]
+  if len(df_unclustered) == 0:
+    return df
+  unclustered_leg_ids = df_unclustered[cn.LEG_ID].unique()
+  clustered_legs = []
+  for i, leg_id in enumerate(leg_ids):
+    if leg_id not in unclustered_leg_ids:
+      clustered_legs.append(i)
+  distances = np.delete(distances, clustered_legs, axis=0)
+  distances = np.delete(distances, clustered_legs, axis=1)
+
+  assert distances.shape[0] == df_unclustered[cn.LEG_ID].nunique()
+  assert distances.shape[1] == df_unclustered[cn.LEG_ID].nunique()
+
+  existing_labels = df[cn.ASSIGNED_CLUSTER].unique()
+  db_clusters = apply_dbscan(df_unclustered, distances, eps, min_samples, existing_labels)
   leg_to_cluster = defaultdict(int)
 
   for cluster_number, leg_ids in db_clusters.items():
     for leg_id in leg_ids:
       leg_to_cluster[leg_id] = cluster_number
+  
+  for k, v in leg_to_cluster.items():
+    df.loc[df[cn.LEG_ID] == k, cn.ASSIGNED_CLUSTER] = v
 
-  df.loc[:, cn.ASSIGNED_CLUSTER] = df[cn.LEG_ID].map(leg_to_cluster)
   return df
 
 def main(HD_type):
@@ -68,7 +102,7 @@ def main(HD_type):
       distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
     
     fig = "Fig" + str(i) + ".png"
-    elbow = kdist.locate_elbow(distances, fig, 4)
+    elbows = kdist.locate_elbow(distances, fig, 4)
 
     # Save distance matrix for heatmap
     distance_file = "distance_matrix_" + str(i) + ".csv"
@@ -81,15 +115,20 @@ def main(HD_type):
     log.info("Silhouette score of {} - {}: {}".format(row.from_depot, row.to_depot, silhouette))
 
     # Clustering
-    df_clustered = cluster(df_sub, distances, elbow)
-    result_list.append(df_clustered)
+    df_sub.loc[:, cn.ASSIGNED_CLUSTER] = -1
+    for elbow in elbows:
+      df_sub = cluster(df_sub, distances, elbow)
+
+    # df_sub = assign_noise_to_cluster(df_sub)
+
+    result_list.append(df_sub)
     
     # Visualise on map
     map_file = "Map_" + str(i)
-    mm.make_map(df_clustered, cn.ASSIGNED_CLUSTER, save=True, map_file_name=map_file)
+    mm.make_map(df_sub, cn.ASSIGNED_CLUSTER, save=True, map_file_name=map_file)
 
     # Evaluate with homogeneity, completeness and v_measure scores
-    homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(df_clustered[cn.CLUSTER], df_clustered[cn.ASSIGNED_CLUSTER])
+    homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(df_sub[cn.CLUSTER], df_sub[cn.ASSIGNED_CLUSTER])
     print(homogeneity, completeness, v_measure)
   
   result = pd.concat(result_list)
