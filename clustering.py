@@ -94,7 +94,7 @@ def main(HD_type):
   i = 0
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
     i += 1
-    df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)]
+    df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)].copy()
 
     if HD_type == "HD":
       distances, labels = HD.make_hausdorff_matrix(df_sub, True)
