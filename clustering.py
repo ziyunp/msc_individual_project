@@ -20,17 +20,6 @@ import MLHD
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
-# def assign_noise_to_cluster(df):
-#   last_index = df[cn.ASSIGNED_CLUSTER].max()
-#   if len(df[df[cn.ASSIGNED_CLUSTER] == -1]) > 0:
-#     # Noise points are given a cluster label each
-#     for index, row in df.iterrows():
-#       if row[cn.ASSIGNED_CLUSTER] == -1:
-#         last_index += 1
-#         df.iloc[index][cn.ASSIGNED_CLUSTER] = last_index
-        
-#   return df
-
 def apply_dbscan(df, distances, eps, min_samples, used_labels):
   leg_ids = df[cn.LEG_ID].unique()
   clustering = DBSCAN(eps=eps, min_samples=min_samples, metric="precomputed").fit(distances)
@@ -46,9 +35,8 @@ def apply_dbscan(df, distances, eps, min_samples, used_labels):
     db_clusters[cluster_number].append(leg_id)
   return db_clusters
 
-def cluster(df, distances, eps, min_samples = 2):
+def cluster(df, distances, eps, min_samples):
   leg_ids = df[cn.LEG_ID].unique()
-  df_clustered = df[df[cn.ASSIGNED_CLUSTER] != -1]
   df_unclustered = df[df[cn.ASSIGNED_CLUSTER] == -1]
   if len(df_unclustered) == 0:
     return df
@@ -117,9 +105,10 @@ def main(HD_type):
     # Clustering
     df_sub.loc[:, cn.ASSIGNED_CLUSTER] = -1
     for elbow in elbows:
-      df_sub = cluster(df_sub, distances, elbow)
-
-    # df_sub = assign_noise_to_cluster(df_sub)
+      min_pts = 2
+      if elbow == elbows[-1]:
+        min_pts = 1
+      df_sub = cluster(df_sub, distances, elbow, min_pts)
 
     result_list.append(df_sub)
     
