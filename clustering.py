@@ -90,7 +90,7 @@ def main(HD_type):
       distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
     
     fig = "Fig" + str(i) + ".png"
-    elbows = kdist.locate_elbow(distances, fig, 4)
+    elbows = kdist.locate_elbow(distances, fig, True)
 
     # Save distance matrix for heatmap
     distance_file = "distance_matrix_" + str(i) + ".csv"

@@ -8,28 +8,41 @@ from kneed import KneeLocator
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
-def locate_elbow(distance, figName, k=3):
+def locate_elbow(distance, figName, multiple=False, k=4):
     nbrs = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='precomputed').fit(distance)
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
     kth_dist.sort()
     x_data = indices[:,0]
     y_data = kth_dist
-    # Find elbows recursively until x contains less than 4 points (min points to form an elbow)
-    x_start = 0
+
     elbows = []
+
+    if not multiple:
+        kneedle = KneeLocator(x_data, y_data, curve='convex', direction='increasing', interp_method='polynomial')
+        if kneedle.elbow_y != None:
+            elbows.append(kneedle.elbow_y)
+        kneedle.plot_knee()
+        plt.show()
+        return elbows
+    
+    # Find multiple elbows 
+    x_start = 0
     elbows_x = []
-    while x_start != None and x_start < len(x_data) - 4:
+    # Min num of points to form an elbow = 3
+    while x_start != None and x_start < len(x_data) - 3:
         x = x_data[x_start:]
         y = y_data[x_start:]
         kneedle = KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
-        # TODO: should we take the last value in y as an elbow value? - the furthest distance from kth neighbours => will include all points
-        if kneedle.elbow_y != None:
-            elbows.append(kneedle.elbow_y)
+        if kneedle.elbow_y != None and kneedle.elbow_y != y_data[-1]:
+            if elbows and kneedle.elbow_y / elbows[-1] < 2:
+                # If this elbow is less than double the previous elbow, take the later elbow
+                elbows[-1] = kneedle.elbow_y
+                elbows_x[-1] = kneedle.elbow
+            else:
+                elbows.append(kneedle.elbow_y)
+                elbows_x.append(kneedle.elbow)
         x_start = kneedle.elbow
-        elbows_x.append(kneedle.elbow)
-        # kneedle.plot_knee()
-        # plt.show()
 
     # Plot all knees
     kl = KneeLocator(x_data, y_data, curve='convex', direction='increasing', interp_method='polynomial')
