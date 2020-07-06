@@ -1,6 +1,6 @@
 import folium as f
 
-colors = ["red", "blue", "black", "green", "purple", "orange", "darkred", "darkblue", "darkgreen", "gray", "darkpurple"]
+colors = ["red", "blue", "black", "green", "purple", "darkred",  "gray", "darkblue", "darkgreen", "orange", "lightred", "cadetblue", "darkpurple", "pink",  "lightblue", "lightgreen",  "lightgray", "beige", "white"]
 
 def make_map(map_df, cluster_field, save=False, map_file_name="", with_points=False):
   m = f.Map()
