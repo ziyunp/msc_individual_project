@@ -89,9 +89,6 @@ def main(HD_type):
     elif HD_type == "MLHD":
       distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
     
-    fig = "Fig" + str(i) + ".png"
-    elbows = kdist.locate_elbow(distances, fig, True)
-
     # Save distance matrix for heatmap
     distance_file = "distance_matrix_" + str(i) + ".csv"
     labels_file = "labels_" + str(i) + ".csv"
@@ -103,6 +100,9 @@ def main(HD_type):
     log.info("Silhouette score of {} - {}: {}".format(row.from_depot, row.to_depot, silhouette))
 
     # Clustering
+    fig = "Fig" + str(i) + ".png"
+    elbows = kdist.locate_elbow(distances, fig, True)
+    
     df_sub.loc[:, cn.ASSIGNED_CLUSTER] = -1
     for elbow in elbows:
       min_pts = 2
