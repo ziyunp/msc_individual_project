@@ -16,15 +16,16 @@ def locate_elbow(distance, figName, k=4, multiple=False):
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
     kth_dist.sort()
-    x_data = indices[:,0]
+    x_data = np.arange(len(kth_dist))
     y_data = kth_dist
 
     elbows = []
 
     if not multiple:
         kneedle = plot_kdist(x_data, y_data)
-        if kneedle.elbow_y != None:
-            elbows.append(kneedle.elbow_y)
+        elb = kneedle.elbow_y
+        if elb != None and elb != 0:
+            elbows.append(elb)
     else:     
         # Find multiple elbows 
         x_start = 0
@@ -33,12 +34,15 @@ def locate_elbow(distance, figName, k=4, multiple=False):
             x = x_data[x_start:]
             y = y_data[x_start:]
             kneedle = plot_kdist(x, y)
-            if kneedle.elbow_y != None and kneedle.elbow_y != y_data[-1]:
-                if elbows and kneedle.elbow_y / elbows[-1] < 2:
+            elb = kneedle.elbow_y
+            if elb != None and elb != 0 and elb != y_data[-1]:
+                if elbows and (elb == elbows[-1] or elb / elbows[-1] < 2):
                     # If this elbow is less than double the previous elbow, take the later elbow
-                    elbows[-1] = kneedle.elbow_y
+                    elbows[-1] = elb
                 else:
-                    elbows.append(kneedle.elbow_y)
+                    elbows.append(elb)
+            if kneedle.elbow == x_start:
+                break
             x_start = kneedle.elbow
 
     # Plot all knees
