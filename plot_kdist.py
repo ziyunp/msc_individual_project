@@ -24,7 +24,7 @@ def locate_elbow(distance, figName, k=4, multiple=False):
     if not multiple:
         kneedle = plot_kdist(x_data, y_data)
         elb = kneedle.elbow_y
-        if elb != None and elb != 0:
+        if elb != None and elb != 0 and elb != y_data[-1]:
             elbows.append(elb)
     else:     
         # Find multiple elbows 
