@@ -8,6 +8,9 @@ from kneed import KneeLocator
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
+def valid_elbow(elbow, last_data_value):
+    return elbow != None and elbow != 0 and elbow != last_data_value
+
 def plot_kdist(x, y):
     return KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
 
@@ -24,7 +27,7 @@ def locate_elbow(distance, figName, k=4, multiple=False):
     if not multiple:
         kneedle = plot_kdist(x_data, y_data)
         elb = kneedle.elbow_y
-        if elb != None and elb != 0 and elb != y_data[-1]:
+        if valid_elbow(elb, y_data[-1]):
             elbows.append(elb)
     else:     
         # Find multiple elbows 
@@ -35,7 +38,7 @@ def locate_elbow(distance, figName, k=4, multiple=False):
             y = y_data[x_start:]
             kneedle = plot_kdist(x, y)
             elb = kneedle.elbow_y
-            if elb != None and elb != 0 and elb != y_data[-1]:
+            if valid_elbow(elb, y_data[-1]):
                 if elbows and (elb == elbows[-1] or elb / elbows[-1] < 2):
                     # If this elbow is less than double the previous elbow, take the later elbow
                     elbows[-1] = elb
