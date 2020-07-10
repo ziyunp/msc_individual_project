@@ -8,7 +8,10 @@ from kneed import KneeLocator
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
 
-def locate_elbow(distance, figName, multiple=False, k=4):
+def plot_kdist(x, y):
+    return KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
+
+def locate_elbow(distance, figName, k=4, multiple=False):
     nbrs = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='precomputed').fit(distance)
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
@@ -19,7 +22,7 @@ def locate_elbow(distance, figName, multiple=False, k=4):
     elbows = []
 
     if not multiple:
-        kneedle = KneeLocator(x_data, y_data, curve='convex', direction='increasing', interp_method='polynomial')
+        kneedle = plot_kdist(x_data, y_data)
         if kneedle.elbow_y != None:
             elbows.append(kneedle.elbow_y)
     else:     
@@ -29,7 +32,7 @@ def locate_elbow(distance, figName, multiple=False, k=4):
         while x_start != None and x_start < len(x_data) - 3:
             x = x_data[x_start:]
             y = y_data[x_start:]
-            kneedle = KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
+            kneedle = plot_kdist(x, y)
             if kneedle.elbow_y != None and kneedle.elbow_y != y_data[-1]:
                 if elbows and kneedle.elbow_y / elbows[-1] < 2:
                     # If this elbow is less than double the previous elbow, take the later elbow
@@ -39,7 +42,7 @@ def locate_elbow(distance, figName, multiple=False, k=4):
             x_start = kneedle.elbow
 
     # Plot all knees
-    kl = KneeLocator(x_data, y_data, curve='convex', direction='increasing', interp_method='polynomial')
+    kl = plot_kdist(x_data, y_data)
     plt.style.use('ggplot')
     fig = plt.figure(figsize=(6, 6))
     plt.title("Default")
