@@ -14,7 +14,7 @@ def valid_elbow(elbow, last_data_value):
 def plot_kdist(x, y):
     return KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
 
-def locate_elbow(distance, figName, k=4, multiple=False):
+def locate_elbow(distance, figName, k, multiple):
     nbrs = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='precomputed').fit(distance)
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
@@ -27,6 +27,11 @@ def locate_elbow(distance, figName, k=4, multiple=False):
     if not multiple:
         kneedle = plot_kdist(x_data, y_data)
         elb = kneedle.elbow_y
+        # i = kneedle.elbow
+        # while elb == 0 and i < len(y_data):
+        #     i += 1
+        #     elb = y_data[i]
+
         if valid_elbow(elb, y_data[-1]):
             elbows.append(elb)
     else:     
@@ -38,6 +43,11 @@ def locate_elbow(distance, figName, k=4, multiple=False):
             y = y_data[x_start:]
             kneedle = plot_kdist(x, y)
             elb = kneedle.elbow_y
+            # i = kneedle.elbow
+            # while elb == 0 and i < len(y_data):
+            #     i += 1
+            #     elb = y_data[i]
+
             if valid_elbow(elb, y_data[-1]):
                 if elbows and (elb == elbows[-1] or elb / elbows[-1] < 2):
                     # If this elbow is less than double the previous elbow, take the later elbow
