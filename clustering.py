@@ -16,6 +16,7 @@ from sklearn import metrics
 import utils.make_map as mm
 import basic_HD as HD
 import MLHD 
+import utils.process_dist_mat as pdm
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
@@ -64,7 +65,7 @@ def cluster(df, distances, eps, min_samples):
 
   return df
 
-def main(HD_type):
+def main(distance_metric, clustering_algorithm):
   data_file = config.FILENAMES["all_data_cleaned"] # file stored locally
   log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
@@ -79,15 +80,20 @@ def main(HD_type):
 
   log.info("Clustering routes between each pair of sites")
   result_list = []
+
+  from_to = ["nottingham_eastmidsairport", "prdc_swdc", "prdc_ydc", "newcastle_warringtonrailhub", "ndc_sheffield", "swdc_warrington", "medway_prdc", "swdc_heathrowwdc", "ndc_bristol"]
+
   i = 0
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
     i += 1
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)].copy()
 
-    if HD_type == "HD":
+    if distance_metric == "HD":
       distances, labels = HD.make_hausdorff_matrix(df_sub, True)
-    elif HD_type == "MLHD":
+    elif distance_metric == "MLHD":
       distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
+    elif distance_metric == "precomputed":
+      distances, labels, df_sub = pdm.get_distance_matrix(df_sub, from_to[i-1])
     
     # Save distance matrix for heatmap
     distance_file = "distance_matrix_" + str(i) + ".csv"
@@ -100,9 +106,14 @@ def main(HD_type):
     log.info("Silhouette score of {} - {}: {}".format(row.from_depot, row.to_depot, silhouette))
 
     # Clustering
-    fig = "Fig" + str(i) + ".png"
-    elbows = kdist.locate_elbow(distances, fig, True)
-    
+    fig = "Elbow_" + str(i) + ".png"
+    if clustering_algorithm == "DBSCAN":
+      elbows = kdist.locate_elbow(distances, fig, 5, False)
+    elif clustering_algorithm == "DMDBSCAN":
+      elbows = kdist.locate_elbow(distances, fig, 5, True)
+
+    assert len(elbows) > 0
+
     df_sub.loc[:, cn.ASSIGNED_CLUSTER] = -1
     for elbow in elbows:
       min_pts = 2
@@ -133,4 +144,4 @@ def main(HD_type):
 
 
 if __name__ == "__main__":
-  main("MLHD")
+  main("HD", "DMDBSCAN")
