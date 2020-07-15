@@ -114,10 +114,10 @@ def collective_compensation_distance(lm, N_lines):
   return diff
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
-  radius = 0.5 * Rm * lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
+  radius = lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
   index = tree_N.query_radius([lm["midpoint"]], r=radius)
   if len(index[0]) == 0:
-    index = tree_N.query([lm["midpoint"]], return_distance=False, k=1)
+    index = tree_N.query([lm["midpoint"]], return_distance=False, k=2)
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
@@ -176,9 +176,9 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     if make_map:
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
-    total_prod_of_length_distance += m_length * distance
-  return 1/Rm * 1/total_M_length * total_prod_of_length_distance
+    total_prod_of_length_distance += distance
   # return 1/total_M_length * total_prod_of_length_distance
+  return 1/i * total_prod_of_length_distance
 
   
 def make_hausdorff_matrix(df, saved=False):
@@ -206,16 +206,18 @@ def make_hausdorff_matrix(df, saved=False):
     u_id = leg_ids[r]
     data = df[df[cn.LEG_ID] == u_id]
     labels[r] = data[cn.CLUSTER].unique()
-    for c in range(r+1, n):
+    for c in range(n):
       make_map = False
-      v_id = leg_ids[c]
-      u = trees_and_lines[u_id]["lines"]
-      v = trees_and_lines[v_id]["lines"]
-      v_tree = trees_and_lines[v_id]["tree"]
-      distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
-      # Plot a full map
+      if r == c:
+        distances[r, c] = 0
+      else:
+        v_id = leg_ids[c]
+        u = trees_and_lines[u_id]["lines"]
+        v = trees_and_lines[v_id]["lines"]
+        v_tree = trees_and_lines[v_id]["tree"]
+        distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
+        # Plot a full map
       if make_map:
         map_file_name = "Full_" + str(r) + "-" + str(c)
         mm.make_map_with_line_segments(u, v, True, True, map_file_name, str(distances[r, c]))
-      distances[c, r] = distances[r, c]
   return distances, labels
