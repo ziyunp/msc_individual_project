@@ -14,11 +14,23 @@ def valid_elbow(elbow, last_data_value):
 def plot_kdist(x, y):
     return KneeLocator(x, y, curve='convex', direction='increasing', interp_method='polynomial')
 
-def prompt_for_elbow():
-    elb = input("Enter elbow: ")
-    return float(elb)
+def prompt_for_elbow(detected_elbow):
+    accept = input("Accept auto-detected elbow: {}? y/n:  ".format(str(detected_elbow)))
+    while accept != "n" and accept != "y":
+        accept = input("Accept auto-detected elbow: {}? y/n:  ".format(str(detected_elbow)))        
+    if accept == "n":
+        elb = input("Enter elbow (0 to skip this elbow or -1 to end): ")
+        is_float = False
+        while not is_float:
+            try: 
+                elb = float(elb)
+                is_float = True
+            except:
+                elb = input("Elbow must be a float value! Enter elbow (0 to skip this elbow or -1 to end): ")
+        return elb
+    return detected_elbow
 
-def plot_all_elbows(x, y, elbows, fig_name):
+def plot_all_elbows(x, y, elbows, save=False, fig_name=""):
     kl = plot_kdist(x, y)
     plt.style.use('ggplot')
     fig = plt.figure(figsize=(6, 6))
@@ -28,9 +40,10 @@ def plot_all_elbows(x, y, elbows, fig_name):
     for k, c, s in zip(elbows, colors, elbows):
         plt.hlines(k, plt.xlim()[0], plt.xlim()[1], linestyles='--', colors=c, label=f'eps = {s}')
     plt.legend(loc="best")
-    fig.savefig(fig_name, dpi=fig.dpi)
+    if save:
+        fig.savefig(fig_name, dpi=fig.dpi)
 
-def locate_elbow(distance, k, multiple, auto_detection=True, save_elbow=True, fig_name=""):
+def locate_elbow(distance, k, multiple, save_elbow=True, fig_name=""):
     nbrs = NearestNeighbors(n_neighbors=k, algorithm='auto', metric='precomputed').fit(distance)
     distances, indices = nbrs.kneighbors(distance)
     kth_dist = distances[:,-1]
@@ -42,45 +55,30 @@ def locate_elbow(distance, k, multiple, auto_detection=True, save_elbow=True, fi
 
     if not multiple:
         kneedle = plot_kdist(x_data, y_data)
-        if auto_detection:
-            elb = kneedle.elbow_y
-        else:
-            kneedle.plot_knee()
-            plt.show()
-            elb = prompt_for_elbow()
+        plot_all_elbows(x_data, y_data, [kneedle.elbow_y])
+        plt.show()
+        elb = prompt_for_elbow(kneedle.elbow_y)
         if valid_elbow(elb, y_data[-1]):
             elbows.append(elb)
     else:     
         x_start = 0
-        # Min num of points to form an elbow = 3
-        if auto_detection:
-            while x_start != None and x_start < len(x_data) - 3:
-                x = x_data[x_start:]
-                y = y_data[x_start:]
-                kneedle = plot_kdist(x, y)
-                elb = kneedle.elbow_y
-                if valid_elbow(elb, y_data[-1]):
-                    if elbows and (elb == elbows[-1] or elb / elbows[-1] < 2):
-                        # If this elbow is less than double the previous elbow, take the later elbow
-                        elbows[-1] = elb
-                    else:
-                        elbows.append(elb)
-                if kneedle.elbow == x_start:
-                    break
-                x_start = kneedle.elbow
-        else:
-            kneedle = plot_kdist(x_data, y_data)
-            end = False
-            while not end:
-                kneedle.plot_knee()     
-                plt.show()
-                elb = prompt_for_elbow()
-                if elb == 0:
-                    end = True
-                if valid_elbow(elb, y_data[-1]):
-                    elbows.append(elb)
-            
+        end = False
+        while not end:
+            x = x_data[x_start:]
+            y = y_data[x_start:]
+            kneedle = plot_kdist(x, y)
+            plot_all_elbows(x_data, y_data, elbows + [kneedle.elbow_y])
+            plt.show()
+            elb = prompt_for_elbow(kneedle.elbow_y)
+            if elb == -1:
+                end = True
+            if valid_elbow(elb, y_data[-1]):
+                elbows.append(elb)
+            if kneedle.elbow == x_start:
+                break
+            x_start = kneedle.elbow
+
     if save_elbow:
-        plot_all_elbows(x_data, y_data, elbows, fig_name)
+        plot_all_elbows(x_data, y_data, elbows, True, fig_name)
 
     return elbows
