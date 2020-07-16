@@ -108,9 +108,9 @@ def main(distance_metric, clustering_algorithm):
     # Clustering
     fig = "Elbow_" + str(i) + ".png"
     if clustering_algorithm == "DBSCAN":
-      elbows = kdist.locate_elbow(distances, fig, 5, False)
+      elbows = kdist.locate_elbow(distances, 5, multiple=False, fig_name=fig)
     elif clustering_algorithm == "DMDBSCAN":
-      elbows = kdist.locate_elbow(distances, fig, 5, True)
+      elbows = kdist.locate_elbow(distances, 5, multiple=True, fig_name=fig)
 
     assert len(elbows) > 0
 
