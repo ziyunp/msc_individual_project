@@ -17,12 +17,17 @@ import pickle
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
+def convert_coords_to_radians(coord):
+  x, y = coord
+  x_rad, y_rad = map(radians, [x, y])
+  return (x_rad, y_rad)
+
 def make_lines(df):
     """
     Takes in a dataframe with the lat/lon points in Event_Lat and Event_Long columns
     Returns a list of the lines for the modified line Hausdorff distance function
     :param df: dataframe with lat/lon points in separate columns
-    :return: list of lines with { "p1": (x1, y1), "p2": (x2, y2), "m": m, "c": c } representing a line
+    :return: list of lines with { "p1": point1, "p2": point2, "m": gradient, "c": y-intercept, "len": length, "midpoint": midpoint, "dttm": dttm } representing a line
     """
     lines = []
     df_coords = df[[cn.EVENT_LAT, cn.EVENT_LONG]].drop_duplicates()
@@ -114,10 +119,11 @@ def collective_compensation_distance(lm, N_lines):
   return diff
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
-  radius = lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
-  index = tree_N.query_radius([lm["midpoint"]], r=radius)
+  radius = 0.5 * lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
+  midpoint = convert_coords_to_radians(lm["midpoint"])
+  index = tree_N.query_radius([midpoint], r=radius)
   if len(index[0]) == 0:
-    index = tree_N.query([lm["midpoint"]], return_distance=False, k=2)
+    index = tree_N.query([midpoint], return_distance=False, k=3)
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
@@ -193,8 +199,12 @@ def make_hausdorff_matrix(df, saved=False):
     for id in leg_ids:
       data = df[df[cn.LEG_ID] == id]
       lines = make_lines(data)
-      midpoints = np.asarray([np.array(line["midpoint"]) for line in lines])
-      ball_tree = tree.construct_balltree(midpoints)
+      midpoints_rad = []
+      for line in lines:
+        mid_x, mid_y = convert_coords_to_radians(line["midpoint"])
+        midpoints_rad.append([mid_x, mid_y])
+      midpoints_rad = np.asarray(midpoints_rad)
+      ball_tree = tree.construct_balltree(midpoints_rad)
       trees_and_lines[id] = { "lines": lines, "tree": ball_tree }
     with open(filename, 'wb') as trees_and_lines_file:
       pickle.dump(trees_and_lines, trees_and_lines_file)
