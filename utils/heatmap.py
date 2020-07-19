@@ -10,19 +10,11 @@ def arrange_matrix_by_cluster(matrix, labels):
   ordered_matrix = np.array(list(map(lambda x, y: y[x], order_rows, matrix)))
   return ordered_matrix[ordered_indices], ordered_indices
 
-def main(HD_type):
+def main():
   for i in range(1, 10):
     # Get data
     labels_file = config.DATA_FOR_HEATMAP["labels"] + str(i) + ".csv"
-    if HD_type == "HD":
-      distance_file = config.DATA_FOR_HEATMAP["basicHD_distances"] + str(i) + ".csv"
-    elif HD_type == "MLHD":
-      distance_file = config.DATA_FOR_HEATMAP["MLHD_distances"] + str(i) + ".csv"
-    elif HD_type == "MLHD_no_length":
-      distance_file = config.DATA_FOR_HEATMAP["MLHD_no_length_distances"] + str(i) + ".csv"
-    elif HD_type == "balltree_lenm": 
-      distance_file = config.DATA_FOR_HEATMAP["balltree_distances"] + str(i) + ".csv"
-      
+    distance_file = config.DATA_FOR_HEATMAP["distances"] + str(i) + ".csv"
     labels = np.loadtxt(labels_file, delimiter=",")
     distance_matrix = np.loadtxt(distance_file, delimiter=",")
     
@@ -36,6 +28,8 @@ def main(HD_type):
     np.savetxt(indices_file, ordered_indices, delimiter=",")
 
     # Plot heat_map
+    fig = plt.figure(figsize=(6, 6))
+    fig_name = "Heatmap_" + str(i) + ".png"
     heat_map = plt.imshow(ordered_matrix, cmap="hot")
 
     # Label heatmap with cluster labels
@@ -52,7 +46,7 @@ def main(HD_type):
           unique_labels.append(ordered_labels[i])
     plt.xticks(label_loc, unique_labels)
     plt.yticks(label_loc, unique_labels)
-    plt.show()
+    fig.savefig(fig_name, dpi=fig.dpi)
 
 if __name__ == "__main__":
-  main("balltree_lenm")
+  main()
