@@ -119,15 +119,18 @@ def collective_compensation_distance(lm, N_lines):
   return diff
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
+  d_penalty = 0
   radius = 0.5 * lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
   midpoint = convert_coords_to_radians(lm["midpoint"])
   index = tree_N.query_radius([midpoint], r=radius)
   if len(index[0]) == 0:
-    index = tree_N.query([midpoint], return_distance=False, k=3)
+    dist, index = tree_N.query([midpoint], return_distance=True, k=2)
+    d_penalty = (dist[0][0] - radius) * config.CONSTANTS["earth_radius"]
+
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
-  return nearest_lines
+  return nearest_lines, d_penalty
 
 # def within_neighborhood(lm, lines_N, Rm):
 #   m_length = lm["len"]
@@ -168,7 +171,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     i += 1
     m_length = lm["len"]
     total_M_length += m_length
-    N_neighbors = within_neighborhood(lm, lines_N, tree_N, Rm)
+    N_neighbors, d_penalty = within_neighborhood(lm, lines_N, tree_N, Rm)
     # N_neighbors = within_neighborhood(lm, lines_N, Rm)
     d_angle = collective_angle_distance(lm, N_neighbors)
     assert d_angle >= 0
@@ -176,17 +179,15 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     assert d_perp >= 0
     d_comp = collective_compensation_distance(lm, N_neighbors)
     assert d_comp >= 0
-    d_parallel = collective_parallel_distance(lm, N_neighbors)
-    assert d_parallel >= 0
-    distance = d_angle + d_perp + d_parallel + d_comp
+    # d_parallel = collective_parallel_distance(lm, N_neighbors)
+    # assert d_parallel >= 0
+    distance = d_angle + d_perp + d_comp + d_penalty
     if make_map:
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
-    total_prod_of_length_distance += distance
-  # return 1/total_M_length * total_prod_of_length_distance
-  return 1/i * total_prod_of_length_distance
+    total_prod_of_length_distance += m_length * distance
+  return 1/total_M_length * total_prod_of_length_distance
 
-  
 def make_hausdorff_matrix(df, saved=False):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
