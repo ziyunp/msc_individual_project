@@ -65,7 +65,7 @@ def cluster(df, distances, eps, min_samples):
 
   return df
 
-def main(distance_metric, clustering_algorithm):
+def main(distance_metric, clustering_algorithm, k=3):
   data_file = config.FILENAMES["all_data_cleaned"] # file stored locally
   log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
@@ -108,9 +108,9 @@ def main(distance_metric, clustering_algorithm):
     # Clustering
     fig = "Elbow_" + str(i) + ".png"
     if clustering_algorithm == "DBSCAN":
-      elbows = kdist.locate_elbow(distances, 5, multiple=False, fig_name=fig)
+      elbows = kdist.locate_elbow(distances, k, multiple=False, fig_name=fig)
     elif clustering_algorithm == "DMDBSCAN":
-      elbows = kdist.locate_elbow(distances, 5, multiple=True, fig_name=fig)
+      elbows = kdist.locate_elbow(distances, k, multiple=True, fig_name=fig)
 
     assert len(elbows) > 0
 
