@@ -65,6 +65,32 @@ def cluster(df, distances, eps, min_samples):
 
   return df
 
+def clustering_multi_eps(df, distance_matrix, elbows, reversed=False):
+  if reversed:
+    start = len(elbows) - 1
+    stop = 0
+    step = -1
+    stop += step
+    for e in range(start, stop, step):
+      elbow = elbows[e]
+      min_pts = 2
+      if elbow == elbows[0]:
+        min_pts = 1
+      df = cluster(df, distance_matrix, elbow, min_pts)
+  else:
+    for elbow in elbows: 
+      min_pts = 2
+      if elbow == elbows[-1]:
+        min_pts = 1
+      df = cluster(df, distance_matrix, elbow, min_pts)
+  return df
+
+def clustering_multi_minpts(df, distance_matrix, elbows, minpts_arr):
+  elbow = elbows[0] # not varying elbows
+  for min_pts in minpts_arr:
+    df = cluster(df, distance_matrix, elbow, min_pts)
+  return df
+
 def main(distance_metric, clustering_algorithm, k=3):
   data_file = config.FILENAMES["all_data_cleaned"] # file stored locally
   log.info("Reading in data with leg_ids from {}".format(data_file))
@@ -115,11 +141,8 @@ def main(distance_metric, clustering_algorithm, k=3):
     assert len(elbows) > 0
 
     df_sub.loc[:, cn.ASSIGNED_CLUSTER] = -1
-    for elbow in elbows:
-      min_pts = 2
-      if elbow == elbows[-1]:
-        min_pts = 1
-      df_sub = cluster(df_sub, distances, elbow, min_pts)
+
+    df_sub = clustering_multi_eps(df_sub, distances, elbows)
 
     result_list.append(df_sub)
     
@@ -142,6 +165,6 @@ def main(distance_metric, clustering_algorithm, k=3):
   result.to_csv(export_path, index=False)
   log.info("Isotrak data with clusters exported")
 
-
+# DBSCAN + multi_minpts or DMDBSCAN + multi_eps / multi_eps_reversed
 if __name__ == "__main__":
-  main("HD", "DMDBSCAN")
+  main("HD", "DMDBSCAN", 5)
