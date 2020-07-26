@@ -25,7 +25,7 @@ def distance_btw_two_points(p1, p2):
     c = 2 * asin(sqrt(a)) 
     return c * config.CONSTANTS["earth_radius"] # in km
 
-def construct_line(point1, point2, dttm):
+def construct_line(point1, point2, dttm, road1, road2):
   length = distance_btw_two_points(point1, point2)
   x1, y1 = point1
   x2, y2 = point2
@@ -36,7 +36,7 @@ def construct_line(point1, point2, dttm):
   m = (y2 - y1) / diff_x
   c = y1 - m * x1
   midpoint = get_midpoint(point1, point2)
-  return { "p1": point1, "p2": point2, "m": m, "c": c, "len": length, "midpoint": midpoint, "dttm": dttm }
+  return { "p1": point1, "p2": point2, "m": m, "c": c, "len": length, "midpoint": midpoint, "dttm": dttm, "road1": road1, "road2": road2 }
 
 def get_perpendicular_distance(shorter_line, longer_line):
   """

@@ -32,8 +32,10 @@ def make_lines(df):
       point2 = df_coords.iloc[i + 1]
       dttm1 = df_filtered.iloc[i][cn.EVENT_DTTM]
       dttm2 = df_filtered.iloc[i + 1][cn.EVENT_DTTM]
+      road1 = df_filtered.iloc[i][cn.ROAD_NAME]
+      road2 = df_filtered.iloc[i + 1][cn.ROAD_NAME]
       avg_dttm = dttm1 + (dttm2 - dttm1) / 2
-      line = hp.construct_line(point1, point2, avg_dttm)
+      line = hp.construct_line(point1, point2, avg_dttm, road1, road2)
       lines.append(line)
     return np.asarray(lines)
 
@@ -64,6 +66,13 @@ def parallel_distance_btw_two_lines(lm, ln):
   if ln["len"] >= lm["len"]:
     return hp.get_parallel_distance(lm, ln)
   return hp.get_parallel_distance(ln, lm)
+
+def road_distance_btw_two_lines(lm, ln):
+  if lm["road1"] == ln["road1"] and lm["road2"] == ln["road2"]:
+    return 0
+  if lm["road1"] != ln["road1"] and lm["road1"] != ln["road2"] and lm["road2"] != ln["road1"] and lm["road2"] != ln["road2"]:
+    return 1
+  return 0.5
 
 def collective_angle_distance(lm, N_lines):
   """
@@ -112,6 +121,12 @@ def collective_compensation_distance(lm, N_lines):
   if diff < 0:
     return 0
   return diff
+
+def collective_road_distance(lm, N_lines):
+  total_road_distance = 0
+  for ln in N_lines:
+    total_road_distance += road_distance_btw_two_lines(lm, ln)
+  return total_road_distance
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
   d_penalty = 0
@@ -173,9 +188,11 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     assert d_perp >= 0
     d_comp = collective_compensation_distance(lm, N_neighbors)
     assert d_comp >= 0
+    d_road = collective_road_distance(lm, N_neighbors)
+    assert d_road >= 0
     # d_parallel = collective_parallel_distance(lm, N_neighbors)
     # assert d_parallel >= 0
-    distance = d_angle + d_perp + d_comp + d_penalty
+    distance = d_angle + d_perp + d_comp + d_penalty + d_road
     if make_map:
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
