@@ -59,8 +59,7 @@ def perpendicular_distance_btw_two_lines(lm, ln):
   ln_length = ln["len"]
   if ln_length >= lm_length:
     return hp.get_perpendicular_distance(lm, ln)
-  perp_distance = hp.get_perpendicular_distance(ln, lm)
-  return (ln_length / lm_length) * perp_distance
+  return hp.get_perpendicular_distance(ln, lm)
 
 def parallel_distance_btw_two_lines(lm, ln):
   if ln["len"] >= lm["len"]:
@@ -135,7 +134,6 @@ def within_neighborhood(lm, lines_N, tree_N, Rm):
   if len(index[0]) == 0:
     dist, index = tree.query_balltree_knn(tree_N, [lm["midpoint"]], 2, True)
     d_penalty = dist[0][0] * config.CONSTANTS["earth_radius"] - radius
-
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
