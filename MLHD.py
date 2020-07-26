@@ -116,9 +116,9 @@ def collective_compensation_distance(lm, N_lines):
 def within_neighborhood(lm, lines_N, tree_N, Rm):
   d_penalty = 0
   radius = 0.5 * lm["len"]
-  index = tree.query_balltree_radius(tree_N, lm["midpoint"], radius)
+  index = tree.query_balltree_radius(tree_N, [lm["midpoint"]], radius)
   if len(index[0]) == 0:
-    dist, index = tree.query_balltree_knn(tree_N, lm["midpoint"], 2, True)
+    dist, index = tree.query_balltree_knn(tree_N, [lm["midpoint"]], 2, True)
     d_penalty = dist[0][0] * config.CONSTANTS["earth_radius"] - radius
 
   nearest_lines = []
