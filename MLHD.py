@@ -4,7 +4,7 @@ import logging
 import os
 import utils.column_names as cn
 import utils.config as config
-import utils.line_functions as lf
+import utils.helpers as hp
 import utils.tree as tree
 import utils.make_map as mm
 from tqdm import tqdm
@@ -16,11 +16,6 @@ import pickle
 
 log = logging.getLogger(__name__)
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-
-def convert_coords_to_radians(coord):
-  x, y = coord
-  x_rad, y_rad = map(radians, [x, y])
-  return (x_rad, y_rad)
 
 def make_lines(df):
     """
@@ -38,13 +33,13 @@ def make_lines(df):
       dttm1 = df_filtered.iloc[i][cn.EVENT_DTTM]
       dttm2 = df_filtered.iloc[i + 1][cn.EVENT_DTTM]
       avg_dttm = dttm1 + (dttm2 - dttm1) / 2
-      line = lf.construct_line(point1, point2, avg_dttm)
+      line = hp.construct_line(point1, point2, avg_dttm)
       lines.append(line)
     return np.asarray(lines)
 
 def angle_distance_btw_two_lines(lm, ln):
-  bearing_m = lf.bearing(lm)
-  bearing_n = lf.bearing(ln)
+  bearing_m = hp.bearing(lm)
+  bearing_n = hp.bearing(ln)
   if bearing_m > bearing_n:
     angle = bearing_m - bearing_n
   else:
@@ -61,14 +56,14 @@ def perpendicular_distance_btw_two_lines(lm, ln):
   lm_length = lm["len"]
   ln_length = ln["len"]
   if ln_length >= lm_length:
-    return lf.get_perpendicular_distance(lm, ln)
-  perp_distance = lf.get_perpendicular_distance(ln, lm)
+    return hp.get_perpendicular_distance(lm, ln)
+  perp_distance = hp.get_perpendicular_distance(ln, lm)
   return (ln_length / lm_length) * perp_distance
 
 def parallel_distance_btw_two_lines(lm, ln):
   if ln["len"] >= lm["len"]:
-    return lf.get_parallel_distance(lm, ln)
-  return lf.get_parallel_distance(ln, lm)
+    return hp.get_parallel_distance(lm, ln)
+  return hp.get_parallel_distance(ln, lm)
 
 def collective_angle_distance(lm, N_lines):
   """
@@ -120,19 +115,18 @@ def collective_compensation_distance(lm, N_lines):
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
   d_penalty = 0
-  radius = 0.5 * lm["len"] / config.CONSTANTS["earth_radius"] # convert to radians
-  midpoint = convert_coords_to_radians(lm["midpoint"])
-  index = tree_N.query_radius([midpoint], r=radius)
+  radius = 0.5 * lm["len"]
+  index = tree.query_balltree_radius(tree_N, lm["midpoint"], radius)
   if len(index[0]) == 0:
-    dist, index = tree_N.query([midpoint], return_distance=True, k=2)
-    d_penalty = (dist[0][0] - radius) * config.CONSTANTS["earth_radius"]
+    dist, index = tree.query_balltree_knn(tree_N, lm["midpoint"], 2, True)
+    d_penalty = dist[0][0] * config.CONSTANTS["earth_radius"] - radius
 
   nearest_lines = []
   for i in index[0]:
     nearest_lines.append(lines_N[i])
   return nearest_lines, d_penalty
 
-# def within_neighborhood(lm, lines_N, Rm):
+# def within_neighborhood_original(lm, lines_N, Rm):
 #   m_length = lm["len"]
 #   perp_distances = {}
 #   for i in range(len(lines_N)):
@@ -163,7 +157,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
   x_max = max(xm)
   y_min = min(ym)
   y_max = max(ym)
-  Rm = lf.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
+  Rm = hp.distance_btw_two_points((x_min, y_min), (x_max, y_max)) / 2
   total_M_length = 0
   total_prod_of_length_distance = 0
   i = 0
@@ -172,7 +166,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     m_length = lm["len"]
     total_M_length += m_length
     N_neighbors, d_penalty = within_neighborhood(lm, lines_N, tree_N, Rm)
-    # N_neighbors = within_neighborhood(lm, lines_N, Rm)
+    # N_neighbors = within_neighborhood_original(lm, lines_N, Rm)
     d_angle = collective_angle_distance(lm, N_neighbors)
     assert d_angle >= 0
     d_perp = collective_perpendicular_distance(lm, N_neighbors)
@@ -200,12 +194,8 @@ def make_hausdorff_matrix(df, saved=False):
     for id in leg_ids:
       data = df[df[cn.LEG_ID] == id]
       lines = make_lines(data)
-      midpoints_rad = []
-      for line in lines:
-        mid_x, mid_y = convert_coords_to_radians(line["midpoint"])
-        midpoints_rad.append([mid_x, mid_y])
-      midpoints_rad = np.asarray(midpoints_rad)
-      ball_tree = tree.construct_balltree(midpoints_rad)
+      midpoints = [line["midpoint"] for line in lines]
+      ball_tree = tree.construct_balltree(midpoints)
       trees_and_lines[id] = { "lines": lines, "tree": ball_tree }
     with open(filename, 'wb') as trees_and_lines_file:
       pickle.dump(trees_and_lines, trees_and_lines_file)
