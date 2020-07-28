@@ -90,10 +90,10 @@ def collective_perpendicular_distance(lm, N_lines):
     :param lm: line, N_lines: the set of neighboring lines of lm
     :return: perpendicular distance between a line and the set of neighboring lines
   """
-  total_perp_distance = 0
+  max_perp_distance = 0
   for ln in N_lines:
-    total_perp_distance += perpendicular_distance_btw_two_lines(lm, ln)
-  return total_perp_distance
+    max_perp_distance = max(max_perp_distance, perpendicular_distance_btw_two_lines(lm, ln))
+  return max_perp_distance
 
 def collective_parallel_distance(lm, N_lines):
   """
