@@ -132,7 +132,7 @@ def within_neighborhood(lm, lines_N, tree_N, Rm):
   radius = 0.5 * lm["len"]
   index = tree.query_balltree_radius(tree_N, [lm["midpoint"]], radius)
   if len(index[0]) == 0:
-    dist, index = tree.query_balltree_knn(tree_N, [lm["midpoint"]], 2, True)
+    dist, index = tree.query_balltree_knn(tree_N, [lm["midpoint"]], 1, True)
     d_penalty = dist[0][0] * config.CONSTANTS["earth_radius"] - radius
   nearest_lines = []
   for i in index[0]:
