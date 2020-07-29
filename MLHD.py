@@ -70,8 +70,8 @@ def road_distance_btw_two_lines(lm, ln):
   if lm["road1"] == ln["road1"] and lm["road2"] == ln["road2"]:
     return 0
   if lm["road1"] != ln["road1"] and lm["road1"] != ln["road2"] and lm["road2"] != ln["road1"] and lm["road2"] != ln["road2"]:
-    return 1
-  return 0.5
+    return lm["len"]
+  return 0.5 * lm["len"]
 
 def collective_angle_distance(lm, N_lines):
   """
@@ -125,7 +125,7 @@ def collective_road_distance(lm, N_lines):
   total_road_distance = 0
   for ln in N_lines:
     total_road_distance += road_distance_btw_two_lines(lm, ln)
-  return total_road_distance
+  return 1/len(N_lines) * total_road_distance
 
 def within_neighborhood(lm, lines_N, tree_N, Rm):
   d_penalty = 0
@@ -180,13 +180,15 @@ def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False):
     total_M_length += m_length
     N_neighbors, d_penalty = within_neighborhood(lm, lines_N, tree_N, Rm)
     # N_neighbors = within_neighborhood_original(lm, lines_N, Rm)
-    d_angle = collective_angle_distance(lm, N_neighbors)
+    assert d_penalty >= 0
+    d_penalty = min(d_penalty, lm["len"])
+    d_angle = min(collective_angle_distance(lm, N_neighbors), m_length)
     assert d_angle >= 0
-    d_perp = collective_perpendicular_distance(lm, N_neighbors)
+    d_perp = min(collective_perpendicular_distance(lm, N_neighbors), m_length)
     assert d_perp >= 0
-    d_comp = collective_compensation_distance(lm, N_neighbors)
+    d_comp = min(collective_compensation_distance(lm, N_neighbors), m_length)
     assert d_comp >= 0
-    d_road = collective_road_distance(lm, N_neighbors)
+    d_road = min(collective_road_distance(lm, N_neighbors), m_length)
     assert d_road >= 0
     # d_parallel = collective_parallel_distance(lm, N_neighbors)
     # assert d_parallel >= 0
