@@ -127,7 +127,7 @@ def collective_road_distance(lm, N_lines):
     total_road_distance += road_distance_btw_two_lines(lm, ln)
   return 1/len(N_lines) * total_road_distance
 
-def within_neighborhood(lm, lines_N, tree_N, Rm):
+def within_neighborhood(lm, lines_N, tree_N):
   d_penalty = 0
   radius = 0.5 * lm["len"]
   index = tree.query_balltree_radius(tree_N, [lm["midpoint"]], radius)
@@ -176,7 +176,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, make_map = False, u_idx="", v_idx="")
     i += 1
     m_length = lm["len"]
     total_M_length += m_length
-    N_neighbors, d_penalty = within_neighborhood(lm, lines_N, tree_N, Rm)
+    N_neighbors, d_penalty = within_neighborhood(lm, lines_N, tree_N)
     # N_neighbors = within_neighborhood_original(lm, lines_N, Rm)
     assert d_penalty >= 0
     d_penalty = min(d_penalty, lm["len"])
