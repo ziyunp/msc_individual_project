@@ -42,10 +42,7 @@ def make_lines(df):
 def angle_distance_btw_two_lines(lm, ln):
   bearing_m = hp.bearing(lm)
   bearing_n = hp.bearing(ln)
-  if bearing_m > bearing_n:
-    angle = bearing_m - bearing_n
-  else:
-    angle = bearing_n - bearing_m
+  angle = bearing_m - bearing_n if bearing_m >= bearing_n else bearing_n - bearing_m
   # smallest angle
   if angle > 180:
     angle = 360 - angle

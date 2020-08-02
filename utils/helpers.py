@@ -1,5 +1,4 @@
 from math import sin, cos, asin, sqrt, radians, atan2, pi, degrees
-import matplotlib.pyplot as plt
 import utils.config as config
 
 OFFSET = 1e-15
@@ -14,10 +13,8 @@ def distance_btw_two_points(p1, p2):
     Calculate the great circle distance between two points 
     on the earth (specified in decimal degrees)
     """
-    x1, y1 = p1
-    x2, y2 = p2
-    # convert decimal degrees to radians 
-    x1, y1, x2, y2 = map(radians, [x1, y1, x2, y2])
+    x1, y1 = convert_coords_to_radians(p1)
+    x2, y2 = convert_coords_to_radians(p2)
     # haversine formula 
     dy = y2 - y1 
     dx = x2 - x1 
@@ -68,10 +65,9 @@ def find_perpendicular_intersect(line, point):
 def get_parallel_distance(shorter_line, longer_line):
   d = shorter_line["len"] / config.CONSTANTS["earth_radius"]
   m = longer_line["m"]
-  mid_x, mid_y = shorter_line["midpoint"]
+  mid_x, mid_y = convert_coords_to_radians(shorter_line["midpoint"])
   c = mid_y - m * mid_x
-  mid_x, mid_y, c = map(radians, [mid_x, mid_y, c])
-
+  c = radians(c)
   # find points at two ends = half the distance from midpoint
   x1 = mid_x - (d/2) / sqrt(1 + m**2)
   x2 = mid_x + (d/2) / sqrt(1 + m**2)
@@ -116,24 +112,12 @@ def determine_left_and_right_ends(point1, point2):
   return left, right
 
 def bearing(line):
-  x1, y1 = line["p1"]
-  x2, y2 = line["p2"]
-  x1, y1, x2, y2 = map(radians, [x1, y1, x2, y2])
+  x1, y1 = convert_coords_to_radians(line["p1"])
+  x2, y2 = convert_coords_to_radians(line["p2"])
   y = sin(y2-y1) * cos(x2)
   x = cos(x1)*sin(x2) - sin(x1)*cos(x2)*cos(y2-y1)
   angle = atan2(y, x)
   return degrees(angle)
-
-def plot_points(xs, ys, c=None):
-  plt.scatter(xs, ys, color=c)
-
-def plot_line(line, c=None):
-  xs = [line["p1"][0]] + [line["p2"][0]]
-  ys = [line["p1"][1]] + [line["p2"][1]]
-  plt.plot(xs, ys, color=c)
-
-def show_plot():
-  plt.show()
 
 def convert_coords_to_radians(coord):
   x, y = coord
