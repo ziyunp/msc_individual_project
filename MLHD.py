@@ -162,7 +162,7 @@ def within_neighborhood(lm, lines_N, tree_N, Rm):
 #   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
 #   return [lines_N[i] for i in filtered_indices]
 
-def compute_MLHD(lines_M, lines_N, tree_N, u_idx, v_idx, make_map = False): 
+def compute_MLHD(lines_M, lines_N, tree_N, make_map = False, u_idx="", v_idx=""): 
   # find Rm
   xm = [m["p1"][0] for m in lines_M] + [m["p2"][0] for m in lines_M]
   ym = [m["p1"][1] for m in lines_M] + [m["p2"][1] for m in lines_M]
@@ -224,17 +224,16 @@ def make_hausdorff_matrix(df, saved=False):
     u_id = leg_ids[r]
     data = df[df[cn.LEG_ID] == u_id]
     labels[r] = data[cn.CLUSTER].unique()
-    for c in range(n):
+    for c in range(r + 1, n):
       make_map = False
-      if r == c:
-        distances[r, c] = 0
-      else:
-        v_id = leg_ids[c]
-        u = trees_and_lines[u_id]["lines"]
-        v = trees_and_lines[v_id]["lines"]
-        v_tree = trees_and_lines[v_id]["tree"]
-        distances[r, c] = compute_MLHD(u, v, v_tree, str(r), str(c), make_map)
-        # Plot a full map
+      v_id = leg_ids[c]
+      u = trees_and_lines[u_id]["lines"]
+      v = trees_and_lines[v_id]["lines"]
+      u_tree = trees_and_lines[u_id]["tree"]
+      v_tree = trees_and_lines[v_id]["tree"]
+      distances[r, c] = max(compute_MLHD(u, v, v_tree), compute_MLHD(v, u, u_tree))
+      distances[c, r] = distances[r, c]
+      # Plot a full map
       if make_map:
         map_file_name = "Full_" + str(r) + "-" + str(c)
         mm.make_map_with_line_segments(u, v, True, True, map_file_name, str(distances[r, c]))

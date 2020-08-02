@@ -28,7 +28,7 @@ def make_points(df):
     """
     return [np.array(item) for item in zip(df[cn.EVENT_LAT], df[cn.EVENT_LONG])]
 
-def make_hausdorff_matrix(df, symm=False):
+def make_hausdorff_matrix(df):
   leg_ids = df[cn.LEG_ID].unique()
   n = len(leg_ids)
   distances = np.zeros((n, n))
@@ -43,9 +43,6 @@ def make_hausdorff_matrix(df, symm=False):
       v = df[df[cn.LEG_ID] == v_id]
       u = make_points(u)
       v = make_points(v)
-      if symm:
-          distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
-      else:
-          distances[r, c] = directed_hausdorff(u, v)[0]
+      distances[r, c] = max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
       distances[c, r] = distances[r, c]
   return distances, labels 

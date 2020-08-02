@@ -92,7 +92,7 @@ def clustering_multi_minpts(df, distance_matrix, elbows, minpts_arr):
   return df
 
 def main(distance_metric, clustering_algorithm, k=3):
-  data_file = config.FILENAMES["all_data_cleaned"] # file stored locally
+  data_file = config.FILENAMES["all_data_cleaned"] 
   log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
 
@@ -115,7 +115,7 @@ def main(distance_metric, clustering_algorithm, k=3):
     df_sub = df[(df.from_depot == row.from_depot) & (df.to_depot == row.to_depot)].copy()
 
     if distance_metric == "HD":
-      distances, labels = HD.make_hausdorff_matrix(df_sub, True)
+      distances, labels = HD.make_hausdorff_matrix(df_sub)
     elif distance_metric == "MLHD":
       distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
     elif distance_metric == "precomputed":
