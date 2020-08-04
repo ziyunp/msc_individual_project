@@ -65,9 +65,9 @@ def find_perpendicular_intersect(line, point):
 def get_parallel_distance(shorter_line, longer_line):
   d = shorter_line["len"] / config.CONSTANTS["earth_radius"]
   m = longer_line["m"]
-  mid_x, mid_y = convert_coords_to_radians(shorter_line["midpoint"])
+  mid_x, mid_y = shorter_line["midpoint"]
   c = mid_y - m * mid_x
-  c = radians(c)
+  mid_x, mid_y, c = map(radians, [mid_x, mid_y, c])
   # find points at two ends = half the distance from midpoint
   x1 = mid_x - (d/2) / sqrt(1 + m**2)
   x2 = mid_x + (d/2) / sqrt(1 + m**2)
