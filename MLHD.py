@@ -66,7 +66,7 @@ def parallel_distance_btw_two_lines(lm, ln):
 def road_distance_btw_two_lines(lm, ln):
   if lm["road1"] == ln["road1"] and lm["road2"] == ln["road2"]:
     return 0
-  if lm["road1"] != ln["road1"] and lm["road1"] != ln["road2"] and lm["road2"] != ln["road1"] and lm["road2"] != ln["road2"]:
+  if lm["road1"] not in [ln["road1"], ln["road2"]] and lm["road2"] not in [ln["road1"], ln["road2"]]:
     return lm["len"]
   return 0.5 * lm["len"]
 
