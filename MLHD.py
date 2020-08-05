@@ -136,66 +136,43 @@ def within_neighborhood(lm, lines_N, tree_N):
     nearest_lines.append(lines_N[i])
   return nearest_lines, d_penalty
 
-# def within_neighborhood_original(lm, lines_N, Rm):
-#   m_length = lm["len"]
-#   perp_distances = {}
-#   for i in range(len(lines_N)):
-#     perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
-#   # sort by absolute perpendicular distance
-#   sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
-#   total_N_length = 0
-#   n_of_lines = 0
-#   for d in sorted_perp_distances:
-#     index = d[0]
-#     perp_distance = d[1]
-#     ln = lines_N[index]
-#     length = ln["len"]
-#     total_N_length += length
-#     n_of_lines += 1
-#     if n_of_lines > 1:
-#       if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
-#         n_of_lines -= 1
-#         break
-#   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
-#   return [lines_N[i] for i in filtered_indices]
+def within_neighborhood_original(lm, lines_N, Rm):
+  m_length = lm["len"]
+  perp_distances = {}
+  for i in range(len(lines_N)):
+    perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
+  # sort by absolute perpendicular distance
+  sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
+  total_N_length = 0
+  n_of_lines = 0
+  for d in sorted_perp_distances:
+    index = d[0]
+    perp_distance = d[1]
+    ln = lines_N[index]
+    length = ln["len"]
+    total_N_length += length
+    n_of_lines += 1
+    if n_of_lines > 1:
+      if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
+        n_of_lines -= 1
+        break
+  filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
+  return [lines_N[i] for i in filtered_indices]
 
-# def collective_road_distance(M_lines, N_lines):
-#   road_M = []
-#   for lm in M_lines:
-#     road_M.append(lm["road1"])
-#   road_M.append(M_lines[-1]["road2"])
-#   road_N = []
-#   for ln in N_lines:
-#     road_N.append(ln["road1"])
-#   road_N.append(N_lines[-1]["road2"])
-#   return lcs(road_M, road_N)
+def collective_road_distance_full(M_lines, N_lines):
+  num_of_M_labels = len(M_lines)
+  road_M = []
+  for lm in M_lines:
+    road_M.append(lm["road1"])
+  road_M.append(M_lines[-1]["road2"])
+  road_N = []
+  for ln in N_lines:
+    road_N.append(ln["road1"])
+  road_N.append(N_lines[-1]["road2"])
+  matching_labels = hp.longest_common_subsequnce(road_M, road_N)
+  return 1/num_of_M_labels * (num_of_M_labels - matching_labels)
 
-# # Dynamic Programming implementation of LCS problem 
-# def lcs(X , Y): 
-# 	# find the length of the strings 
-# 	m = len(X) 
-# 	n = len(Y) 
-
-# 	# declaring the array for storing the dp values 
-# 	L = [[None]*(n+1) for i in range(m+1)] 
-
-# 	"""Following steps build L[m+1][n+1] in bottom up fashion 
-# 	Note: L[i][j] contains length of LCS of X[0..i-1] 
-# 	and Y[0..j-1]"""
-# 	for i in range(m+1): 
-# 		for j in range(n+1): 
-# 			if i == 0 or j == 0: 
-# 				L[i][j] = 0
-# 			elif X[i-1] == Y[j-1]: 
-# 				L[i][j] = L[i-1][j-1]+1
-# 			else: 
-# 				L[i][j] = max(L[i-1][j] , L[i][j-1]) 
-
-# 	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
-# 	return L[m][n] 
-# #end of function lcs 
-
-def compute_MLHD(lines_M, lines_N, tree_N, make_map = False, u_idx="", v_idx=""): 
+def compute_MLHD(lines_M, lines_N, tree_N, make_map=False, u_idx="", v_idx=""): 
   # find Rm
   x_min = lines_M[0]["p1"][0]
   y_min = lines_M[0]["p1"][1]
@@ -228,6 +205,9 @@ def compute_MLHD(lines_M, lines_N, tree_N, make_map = False, u_idx="", v_idx="")
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
     total_prod_of_length_distance += m_length * distance
+  # To compare the full length of road labels
+  # d_road = collective_road_distance_full(lines_M, lines_N) # range 0 - 1
+  # total_prod_of_length_distance += total_M_length * d_road
   return 1/total_M_length * total_prod_of_length_distance
 
 def make_hausdorff_matrix(df, saved=False):

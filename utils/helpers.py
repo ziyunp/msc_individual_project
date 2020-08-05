@@ -123,3 +123,18 @@ def convert_coords_to_radians(coord):
   x, y = coord
   x_rad, y_rad = map(radians, [x, y])
   return (x_rad, y_rad)
+
+def longest_common_subsequnce(M , N): 
+	m = len(M) 
+	n = len(N)
+	# bottom-up dynamic programming method
+	L = [[None] * (n+1) for i in range(m + 1)] 
+	for i in range(m + 1): 
+		for j in range(n + 1): 
+			if i == 0 or j == 0: 
+				L[i][j] = 0
+			elif M[i-1] == N[j-1]: 
+				L[i][j] = L[i-1][j-1]+1
+			else: 
+				L[i][j] = max(L[i-1][j] , L[i][j-1]) 
+	return L[m][n] 
