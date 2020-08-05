@@ -53,31 +53,29 @@ def locate_elbow(distance, k, multiple=False, save_elbow=False, fig_name=""):
 
     elbows = []
 
-    if not multiple:
-        kneedle = plot_kdist(x_data, y_data)
-        while not elbows:
-            plot_all_elbows(x_data, y_data, [kneedle.elbow_y])
-            plt.show()
-            elb = prompt_for_elbow(kneedle.elbow_y)
-            if valid_elbow(elb, y_data[-1]):
-                elbows.append(elb)
-    else:     
-        x_start = 0
-        end = False
-        while not end:
-            x = x_data[x_start:]
-            y = y_data[x_start:]
-            kneedle = plot_kdist(x, y)
-            plot_all_elbows(x_data, y_data, elbows + [kneedle.elbow_y])
-            plt.show()
-            elb = prompt_for_elbow(kneedle.elbow_y)
-            if elb == -1:
-                end = True
-            if valid_elbow(elb, y_data[-1]):
-                elbows.append(elb)
-            if kneedle.elbow == x_start:
-                break
-            x_start = kneedle.elbow
+    # if not multiple:
+        # kneedle = plot_kdist(x_data, y_data)
+        # while not elbows:
+        #     plot_all_elbows(x_data, y_data, [kneedle.elbow_y])
+        #     plt.show()
+        #     elb = prompt_for_elbow(kneedle.elbow_y)
+        #     if valid_elbow(elb, y_data[-1]):
+        #         elbows.append(elb)
+    # else:     
+    x_start = 0
+    end = False
+    while not end:
+        x = x_data[x_start:]
+        y = y_data[x_start:]
+        kneedle = plot_kdist(x, y)
+        plot_all_elbows(x_data, y_data, elbows + [kneedle.elbow_y])
+        plt.show()
+        elb = prompt_for_elbow(kneedle.elbow_y)
+        if valid_elbow(elb, y_data[-1]):
+            elbows.append(elb)
+        if elb == -1 or kneedle.elbow == x_start or (not multiple and len(elbows) == 1):
+            end = True
+        x_start = kneedle.elbow
 
     if save_elbow:
         plot_all_elbows(x_data, y_data, elbows, True, fig_name)
