@@ -159,6 +159,42 @@ def within_neighborhood(lm, lines_N, tree_N):
 #   filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
 #   return [lines_N[i] for i in filtered_indices]
 
+# def collective_road_distance(M_lines, N_lines):
+#   road_M = []
+#   for lm in M_lines:
+#     road_M.append(lm["road1"])
+#   road_M.append(M_lines[-1]["road2"])
+#   road_N = []
+#   for ln in N_lines:
+#     road_N.append(ln["road1"])
+#   road_N.append(N_lines[-1]["road2"])
+#   return lcs(road_M, road_N)
+
+# # Dynamic Programming implementation of LCS problem 
+# def lcs(X , Y): 
+# 	# find the length of the strings 
+# 	m = len(X) 
+# 	n = len(Y) 
+
+# 	# declaring the array for storing the dp values 
+# 	L = [[None]*(n+1) for i in range(m+1)] 
+
+# 	"""Following steps build L[m+1][n+1] in bottom up fashion 
+# 	Note: L[i][j] contains length of LCS of X[0..i-1] 
+# 	and Y[0..j-1]"""
+# 	for i in range(m+1): 
+# 		for j in range(n+1): 
+# 			if i == 0 or j == 0: 
+# 				L[i][j] = 0
+# 			elif X[i-1] == Y[j-1]: 
+# 				L[i][j] = L[i-1][j-1]+1
+# 			else: 
+# 				L[i][j] = max(L[i-1][j] , L[i][j-1]) 
+
+# 	# L[m][n] contains the length of LCS of X[0..n-1] & Y[0..m-1] 
+# 	return L[m][n] 
+# #end of function lcs 
+
 def compute_MLHD(lines_M, lines_N, tree_N, make_map = False, u_idx="", v_idx=""): 
   # find Rm
   x_min = lines_M[0]["p1"][0]
