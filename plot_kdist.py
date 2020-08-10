@@ -52,16 +52,6 @@ def locate_elbow(distance, k, multiple=False, save_elbow=False, fig_name=""):
     y_data = kth_dist
 
     elbows = []
-
-    # if not multiple:
-        # kneedle = plot_kdist(x_data, y_data)
-        # while not elbows:
-        #     plot_all_elbows(x_data, y_data, [kneedle.elbow_y])
-        #     plt.show()
-        #     elb = prompt_for_elbow(kneedle.elbow_y)
-        #     if valid_elbow(elb, y_data[-1]):
-        #         elbows.append(elb)
-    # else:     
     x_start = 0
     end = False
     while not end:

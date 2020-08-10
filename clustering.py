@@ -66,23 +66,16 @@ def cluster(df, distances, eps, min_samples):
   return df
 
 def clustering_multi_eps(df, distance_matrix, elbows, reversed=False):
-  if reversed:
-    start = len(elbows) - 1
-    stop = 0
-    step = -1
-    stop += step
-    for e in range(start, stop, step):
-      elbow = elbows[e]
-      min_pts = 2
-      if elbow == elbows[0]:
-        min_pts = 1
-      df = cluster(df, distance_matrix, elbow, min_pts)
-  else:
-    for elbow in elbows: 
-      min_pts = 2
-      if elbow == elbows[-1]:
-        min_pts = 1
-      df = cluster(df, distance_matrix, elbow, min_pts)
+  start = len(elbows) - 1 if reversed else 0
+  stop = 0 if reversed else len(elbows) - 1
+  step = -1 if reversed else 1
+  stop += step
+  for e in range(start, stop, step):
+    elbow = elbows[e]
+    min_pts = 2
+    if elbow == elbows[stop - 1]:
+      min_pts = 1
+    df = cluster(df, distance_matrix, elbow, min_pts)
   return df
 
 def clustering_multi_minpts(df, distance_matrix, elbows, minpts_arr):
