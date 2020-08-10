@@ -73,7 +73,7 @@ def clustering_multi_eps(df, distance_matrix, elbows, reversed=False):
   for e in range(start, stop, step):
     elbow = elbows[e]
     min_pts = 2
-    if elbow == elbows[stop - 1]:
+    if elbow == elbows[stop - step]:
       min_pts = 1
     df = cluster(df, distance_matrix, elbow, min_pts)
   return df
@@ -85,7 +85,7 @@ def clustering_multi_minpts(df, distance_matrix, elbows, minpts_arr):
   return df
 
 def main(distance_metric, clustering_algorithm, k=3):
-  data_file = config.FILENAMES["all_data_cleaned"] 
+  data_file = config.FILENAMES["all_data_with_road_names_cleaned"] 
   log.info("Reading in data with leg_ids from {}".format(data_file))
   df = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
 
@@ -146,7 +146,7 @@ def main(distance_metric, clustering_algorithm, k=3):
     # Evaluate with homogeneity, completeness and v_measure scores
     homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(df_sub[cn.CLUSTER], df_sub[cn.ASSIGNED_CLUSTER])
     print(homogeneity, completeness, v_measure)
-  
+    
   result = pd.concat(result_list)
 
   log.info("{} pings at end of clustering.py".format(len(result)))
@@ -160,4 +160,4 @@ def main(distance_metric, clustering_algorithm, k=3):
 
 # DBSCAN + multi_minpts or DMDBSCAN + multi_eps / multi_eps_reversed
 if __name__ == "__main__":
-  main("HD", "DMDBSCAN", 5)
+  main("HD", "DBSCAN", 4)
