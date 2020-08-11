@@ -29,12 +29,12 @@ def apply_dbscan(df, distances, eps, min_samples, used_labels):
     for i, lbl in enumerate(clustering.labels_):
       if lbl != -1:
         clustering.labels_[i] += max_used_labels + 1
-  # for every cluster, append the leg_id to the list of legs that belong to a cluster
-  db_clusters = defaultdict(list)
+  
+  # Create a dict of leg_id -> cluster label
+  leg_to_clusters = defaultdict(int)
   for i, cluster_number in enumerate(clustering.labels_):
-    leg_id = leg_ids[i]
-    db_clusters[cluster_number].append(leg_id)
-  return db_clusters
+    leg_to_clusters[leg_ids[i]] = cluster_number
+  return leg_to_clusters
 
 def cluster(df, distances, eps, min_samples):
   leg_ids = df[cn.LEG_ID].unique()
@@ -53,18 +53,14 @@ def cluster(df, distances, eps, min_samples):
 
   assert distances.shape[0] == df_unclustered[cn.LEG_ID].nunique()
   assert distances.shape[1] == df_unclustered[cn.LEG_ID].nunique()
-  # Perform DBSCAN, returns a dict of cluster label -> leg ids belong to this cluster
-  existing_labels = df[cn.ASSIGNED_CLUSTER].unique()
-  db_clusters = apply_dbscan(df_unclustered, distances, eps, min_samples, existing_labels)
-  # Assign cluster labels to all GPS pings by their leg Ids
-  leg_to_cluster = defaultdict(int)
-  for cluster_number, leg_ids in db_clusters.items():
-    for leg_id in leg_ids:
-      leg_to_cluster[leg_id] = cluster_number
-  
-  for k, v in leg_to_cluster.items():
-    df.loc[df[cn.LEG_ID] == k, cn.ASSIGNED_CLUSTER] = v
 
+  # Perform DBSCAN, returns a dict of leg_id -> cluster label
+  existing_labels = df[cn.ASSIGNED_CLUSTER].unique()
+  leg_to_clusters = apply_dbscan(df_unclustered, distances, eps, min_samples, existing_labels)
+
+  # Assign cluster labels to all GPS pings by their leg Ids
+  for k, v in leg_to_clusters.items():
+    df.loc[df[cn.LEG_ID] == k, cn.ASSIGNED_CLUSTER] = v
   return df
 
 def clustering_multi_eps(df, distance_matrix, elbows, reversed=False):
