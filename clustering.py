@@ -39,8 +39,10 @@ def apply_dbscan(df, distances, eps, min_samples, used_labels):
 def cluster(df, distances, eps, min_samples):
   leg_ids = df[cn.LEG_ID].unique()
   df_unclustered = df[df[cn.ASSIGNED_CLUSTER] == -1]
+  # All data is clustered
   if len(df_unclustered) == 0:
     return df
+  # Filter out clustered legs from the distance matrix
   unclustered_leg_ids = df_unclustered[cn.LEG_ID].unique()
   clustered_legs = []
   for i, leg_id in enumerate(leg_ids):
@@ -51,11 +53,11 @@ def cluster(df, distances, eps, min_samples):
 
   assert distances.shape[0] == df_unclustered[cn.LEG_ID].nunique()
   assert distances.shape[1] == df_unclustered[cn.LEG_ID].nunique()
-
+  # Perform DBSCAN, returns a dict of cluster label -> leg ids belong to this cluster
   existing_labels = df[cn.ASSIGNED_CLUSTER].unique()
   db_clusters = apply_dbscan(df_unclustered, distances, eps, min_samples, existing_labels)
+  # Assign cluster labels to all GPS pings by their leg Ids
   leg_to_cluster = defaultdict(int)
-
   for cluster_number, leg_ids in db_clusters.items():
     for leg_id in leg_ids:
       leg_to_cluster[leg_id] = cluster_number
@@ -146,7 +148,7 @@ def main(distance_metric, clustering_algorithm, k=3):
     # Evaluate with homogeneity, completeness and v_measure scores
     homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(df_sub[cn.CLUSTER], df_sub[cn.ASSIGNED_CLUSTER])
     print(homogeneity, completeness, v_measure)
-    
+
   result = pd.concat(result_list)
 
   log.info("{} pings at end of clustering.py".format(len(result)))
