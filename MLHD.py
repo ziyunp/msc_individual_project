@@ -81,7 +81,7 @@ def collective_angle_distance(lm, N_lines):
     total_angle_distance += angle_distance_btw_two_lines(lm, ln)
   return total_angle_distance
 
-def collective_perpendicular_distance(lm, N_lines):
+def collective_perpendicular_distance_max(lm, N_lines):
   """
     Calculates the perpendicular distance between a line and the set of neighboring lines
     :param lm: line, N_lines: the set of neighboring lines of lm
@@ -91,6 +91,17 @@ def collective_perpendicular_distance(lm, N_lines):
   for ln in N_lines:
     max_perp_distance = max(max_perp_distance, perpendicular_distance_btw_two_lines(lm, ln))
   return max_perp_distance
+
+def collective_perpendicular_distance_sum(lm, N_lines):
+  """
+    Calculates the perpendicular distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: perpendicular distance between a line and the set of neighboring lines
+  """
+  total_perp_distance = 0
+  for ln in N_lines:
+    total_perp_distance += perpendicular_distance_btw_two_lines(lm, ln)
+  return total_perp_distance
 
 def collective_parallel_distance(lm, N_lines):
   """
@@ -192,7 +203,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, make_map=False, u_idx="", v_idx=""):
     d_penalty = min(d_penalty, lm["len"])
     d_angle = min(collective_angle_distance(lm, N_neighbors), m_length)
     assert d_angle >= 0
-    d_perp = min(collective_perpendicular_distance(lm, N_neighbors), m_length)
+    d_perp = min(collective_perpendicular_distance_max(lm, N_neighbors), m_length)
     assert d_perp >= 0
     d_comp = min(collective_compensation_distance(lm, N_neighbors), m_length)
     assert d_comp >= 0
@@ -248,4 +259,6 @@ def make_hausdorff_matrix(df, saved=False):
       if make_map:
         map_file_name = "Full_" + str(r) + "-" + str(c)
         mm.make_map_with_line_segments(u, v, True, True, map_file_name, str(distances[r, c]))
+  max_in_matrix = np.amax(distances)
+  distances = distances / max_in_matrix
   return distances, labels
