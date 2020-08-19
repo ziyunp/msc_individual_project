@@ -98,8 +98,6 @@ def main(distance_metric, clustering_algorithm, k=3):
   log.info("Clustering routes between each pair of sites")
   result_list = []
 
-  from_to = ["nottingham_eastmidsairport", "prdc_swdc", "prdc_ydc", "newcastle_warringtonrailhub", "ndc_sheffield", "swdc_warrington", "medway_prdc", "swdc_heathrowwdc", "ndc_bristol"]
-
   i = 0
   for row in tqdm(df_from_to_no_loop.itertuples(), total=df_from_to_no_loop.shape[0]):
     i += 1
@@ -108,7 +106,7 @@ def main(distance_metric, clustering_algorithm, k=3):
     if distance_metric == "HD":
       distances, labels = HD.make_hausdorff_matrix(df_sub)
     elif distance_metric == "MLHD":
-      distances, labels = MLHD.make_hausdorff_matrix(df_sub, True)
+      distances, labels = MLHD.make_hausdorff_matrix(df_sub, saved=True)
     elif distance_metric == "precomputed":
       distances, labels, df_sub = pdm.get_distance_matrix(df_sub, from_to[i-1])
     
@@ -158,4 +156,4 @@ def main(distance_metric, clustering_algorithm, k=3):
 
 # DBSCAN + multi_minpts or DMDBSCAN + multi_eps / multi_eps_reversed
 if __name__ == "__main__":
-  main("HD", "DBSCAN", 4)
+  main("HD", "DBSCAN", 5)
