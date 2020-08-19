@@ -67,8 +67,8 @@ def fill_in_missing_road(gps_data, roads_data):
   gps_data = clean_classification(gps_data)
   return gps_data
 
-def main():
-  data_file = config.FILENAMES["all_data_with_road_names"] # file stored locally
+def main(filename):
+  data_file = config.FILENAMES[filename] # file stored locally
   log.info("Reading in data with leg_ids from  from {}".format(data_file))
 
   data = pd.read_csv(data_file, parse_dates=[cn.EVENT_DTTM])
@@ -94,17 +94,19 @@ def main():
   log.info("Final number of pings: {}".format(len(data)))
   log.info("{} leg_ids at end of classification".format(data[cn.LEG_ID].nunique()))
 
-  if cn.ROAD_NAME in data.columns:
-    log.info("Filling in missing road names...")
-    roads_data_file = config.FILENAMES["roads_data"]
-    roads_data = pd.read_csv(roads_data_file, dtype={cn.LINK_NAME: str, cn.C_WAY: str, cn.SECTION: str})
-    data = fill_in_missing_road(data, roads_data)
+  if cn.ROAD_NAME not in data.columns:
+    data[cn.ROAD_NAME] = np.nan
+  log.info("Filling in missing road names...")
+  roads_data_file = config.FILENAMES["roads_data"]
+  roads_data = pd.read_csv(roads_data_file, dtype={cn.LINK_NAME: str, cn.C_WAY: str, cn.SECTION: str})
+  data = fill_in_missing_road(data, roads_data)
 
-  export_path = config.FILENAMES["all_data_with_road_names_cleaned"] 
+  cleaned_filename = filename + "_cleaned"
+  export_path = config.FILENAMES[cleaned_filename] 
   log.info("Writing out classified data to {}".format(export_path))
   data.to_csv(export_path, index=False)
   log.info("Preprocessing done")
 
 
 if __name__ == "__main__":
-  main()
+  main("test_excl_5km")
