@@ -206,17 +206,21 @@ def compute_MLHD(lines_M, lines_N, tree_N, modified=True, make_map=False, u_idx=
       assert d_perp >= 0
       d_road = min(collective_road_distance(lm, N_neighbors), m_length)
       assert d_road >= 0
+      d_angle = min(collective_angle_distance(lm, N_neighbors), m_length)
+      assert d_angle >= 0
+      d_comp = min(collective_compensation_distance(lm, N_neighbors), m_length)
+      assert d_comp >= 0
     else: 
       N_neighbors = within_neighborhood_original(lm, lines_N, Rm)
-      d_perp = min(collective_perpendicular_distance_sum(lm, N_neighbors), m_length)
+      d_perp = collective_perpendicular_distance_sum(lm, N_neighbors)
       assert d_perp >= 0
       d_parallel = collective_parallel_distance(lm, N_neighbors)
       assert d_parallel >= 0
-    
-    d_angle = min(collective_angle_distance(lm, N_neighbors), m_length)
-    assert d_angle >= 0
-    d_comp = min(collective_compensation_distance(lm, N_neighbors), m_length)
-    assert d_comp >= 0
+      d_angle = collective_angle_distance(lm, N_neighbors)
+      assert d_angle >= 0
+      d_comp = collective_compensation_distance(lm, N_neighbors)
+      assert d_comp >= 0
+
     distance = d_angle + d_perp + d_parallel + d_comp + d_penalty + d_road
     total_prod_of_length_distance += m_length * distance
     
