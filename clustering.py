@@ -106,10 +106,11 @@ def main(distance_metric, clustering_algorithm, k=3):
     if distance_metric == "HD":
       distances, labels = HD.make_hausdorff_matrix(df_sub)
     elif distance_metric == "MLHD":
-      distances, labels = MLHD.make_hausdorff_matrix(df_sub, saved=True)
-    elif distance_metric == "precomputed":
-      distances, labels, df_sub = pdm.get_distance_matrix(df_sub, from_to[i-1])
-    
+      distances, labels = MLHD.make_hausdorff_matrix(df_sub, modified=False)
+    else:
+      log.error("No matching distance metric")
+      return 
+
     # Save distance matrix for heatmap
     distance_file = "distance_matrix_" + str(i) + ".csv"
     labels_file = "labels_" + str(i) + ".csv"

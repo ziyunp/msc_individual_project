@@ -19,10 +19,11 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 def make_lines(df):
     """
-    Takes in a dataframe with the lat/lon points in Event_Lat and Event_Long columns
-    Returns a list of the lines for the modified line Hausdorff distance function
-    :param df: dataframe with lat/lon points in separate columns
-    :return: list of lines with { "p1": point1, "p2": point2, "m": gradient, "c": y-intercept, "len": length, "midpoint": midpoint, "dttm": dttm } representing a line
+    Takes in a dataframe with the lat/lon points with datetime and road labels in each point
+    Returns a list of the lines for MLHD
+    :param df: dataframe with lat/lon/datetime/road_name in separate columns
+    :return: list of lines 
+    :each line is represented by an object of { "p1", "p2", "m", "c", "len", "midpoint", "dttm", "road1", "road2" }
     """
     lines = []
     df_coords = df[[cn.EVENT_LAT, cn.EVENT_LONG]].drop_duplicates()
@@ -58,11 +59,6 @@ def perpendicular_distance_btw_two_lines(lm, ln):
     return hp.get_perpendicular_distance(lm, ln)
   return hp.get_perpendicular_distance(ln, lm)
 
-def parallel_distance_btw_two_lines(lm, ln):
-  if ln["len"] >= lm["len"]:
-    return hp.get_parallel_distance(lm, ln)
-  return hp.get_parallel_distance(ln, lm)
-
 def road_distance_btw_two_lines(lm, ln):
   if lm["road1"] == ln["road1"] and lm["road2"] == ln["road2"]:
     return 0
@@ -92,29 +88,6 @@ def collective_perpendicular_distance_max(lm, N_lines):
     max_perp_distance = max(max_perp_distance, perpendicular_distance_btw_two_lines(lm, ln))
   return max_perp_distance
 
-def collective_perpendicular_distance_sum(lm, N_lines):
-  """
-    Calculates the perpendicular distance between a line and the set of neighboring lines
-    :param lm: line, N_lines: the set of neighboring lines of lm
-    :return: perpendicular distance between a line and the set of neighboring lines
-  """
-  total_perp_distance = 0
-  for ln in N_lines:
-    total_perp_distance += perpendicular_distance_btw_two_lines(lm, ln)
-  return total_perp_distance
-
-def collective_parallel_distance(lm, N_lines):
-  """
-    Calculates the parallel distance between a line and the set of neighboring lines
-    :param lm: line, N_lines: the set of neighboring lines of lm
-    :return: parallel distance between a line and the set of neighboring lines
-  """
-  min_parallel = parallel_distance_btw_two_lines(lm, N_lines[0])
-  for ln in N_lines:
-    parallel_dist = parallel_distance_btw_two_lines(lm, ln)
-    min_parallel = min(min_parallel, parallel_dist)
-  return min_parallel
-
 def collective_compensation_distance(lm, N_lines):
   """
     Calculates the compensation distance between a line and the set of neighboring lines
@@ -130,6 +103,11 @@ def collective_compensation_distance(lm, N_lines):
   return diff
 
 def collective_road_distance(lm, N_lines):
+  """
+    Calculates the road distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: road distance between a line and the set of neighboring lines
+  """
   total_road_distance = 0
   for ln in N_lines:
     total_road_distance += road_distance_btw_two_lines(lm, ln)
@@ -146,42 +124,6 @@ def within_neighborhood(lm, lines_N, tree_N):
   for i in index[0]:
     nearest_lines.append(lines_N[i])
   return nearest_lines, d_penalty
-
-def within_neighborhood_original(lm, lines_N, Rm):
-  m_length = lm["len"]
-  perp_distances = {}
-  for i in range(len(lines_N)):
-    perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
-  # sort by absolute perpendicular distance
-  sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
-  total_N_length = 0
-  n_of_lines = 0
-  for d in sorted_perp_distances:
-    index = d[0]
-    perp_distance = d[1]
-    ln = lines_N[index]
-    length = ln["len"]
-    total_N_length += length
-    n_of_lines += 1
-    if n_of_lines > 1:
-      if perp_distance > 0.5 * Rm * m_length or total_N_length > m_length:
-        n_of_lines -= 1
-        break
-  filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
-  return [lines_N[i] for i in filtered_indices]
-
-def collective_road_distance_full(M_lines, N_lines):
-  num_of_M_labels = len(M_lines)
-  road_M = []
-  for lm in M_lines:
-    road_M.append(lm["road1"])
-  road_M.append(M_lines[-1]["road2"])
-  road_N = []
-  for ln in N_lines:
-    road_N.append(ln["road1"])
-  road_N.append(N_lines[-1]["road2"])
-  matching_labels = hp.longest_common_subsequnce(road_M, road_N)
-  return 1/num_of_M_labels * (num_of_M_labels - matching_labels)
 
 def compute_MLHD(lines_M, lines_N, tree_N, modified=True, make_map=False, u_idx="", v_idx=""): 
   # find Rm
@@ -227,7 +169,7 @@ def compute_MLHD(lines_M, lines_N, tree_N, modified=True, make_map=False, u_idx=
     if make_map:
       map_file_name = u_idx + "-" + v_idx + "_" + str(i) 
       mm.make_map_with_line_segments([lm], N_neighbors, True, True, map_file_name, str(distance))
-  # To compare the full length of road labels
+  # To compare the road labels in full string
   # d_road = collective_road_distance_full(lines_M, lines_N) # range 0 - 1
   # total_prod_of_length_distance += total_M_length * d_road
   return 1/total_M_length * total_prod_of_length_distance
@@ -273,3 +215,86 @@ def make_hausdorff_matrix(df, modified=True, saved=False):
   max_in_matrix = np.amax(distances)
   distances = distances / max_in_matrix
   return distances, labels
+
+"""
+  The functions below are the original methods in MLHD that are replaced
+"""
+
+def within_neighborhood_original(lm, lines_N, Rm):
+  m_length = lm["len"]
+  perp_distances = {}
+  for i in range(len(lines_N)):
+    perp_distances[i] = abs(perpendicular_distance_btw_two_lines(lm, lines_N[i]))
+  # sort by absolute perpendicular distance
+  sorted_perp_distances = sorted(perp_distances.items(), key=lambda x: x[1])
+  total_N_length = 0
+  n_of_lines = 0
+  for d in sorted_perp_distances:
+    index = d[0]
+    perp_distance = d[1]
+    ln = lines_N[index]
+    length = ln["len"]
+    total_N_length += length
+    n_of_lines += 1
+    if n_of_lines > 1:
+      if perp_distance > 0.25 * Rm * m_length or total_N_length > m_length:
+        n_of_lines -= 1
+        break
+  filtered_indices = [x[0] for x in sorted_perp_distances[0:n_of_lines]]
+  return [lines_N[i] for i in filtered_indices]
+
+def parallel_distance_btw_two_lines(lm, ln):
+  if ln["len"] >= lm["len"]:
+    return hp.get_parallel_distance(lm, ln)
+  return hp.get_parallel_distance(ln, lm)
+  
+def perpendicular_distance_btw_two_lines_original(lm, ln):
+  lm_length = lm["len"]
+  ln_length = ln["len"]
+  if ln_length >= lm_length:
+    return hp.get_perpendicular_distance(lm, ln)
+  return ln_length / lm_length * hp.get_perpendicular_distance(ln, lm)
+
+def collective_parallel_distance(lm, N_lines):
+  """
+    Calculates the parallel distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: parallel distance between a line and the set of neighboring lines
+  """
+  min_parallel = parallel_distance_btw_two_lines(lm, N_lines[0])
+  for ln in N_lines:
+    parallel_dist = parallel_distance_btw_two_lines(lm, ln)
+    min_parallel = min(min_parallel, parallel_dist)
+  return min_parallel
+
+def collective_perpendicular_distance_sum(lm, N_lines):
+  """
+    Calculates the perpendicular distance between a line and the set of neighboring lines
+    :param lm: line, N_lines: the set of neighboring lines of lm
+    :return: perpendicular distance between a line and the set of neighboring lines
+  """
+  total_perp_distance = 0
+  for ln in N_lines:
+    total_perp_distance += perpendicular_distance_btw_two_lines_original(lm, ln)
+  return total_perp_distance
+
+"""
+  The full string method of getting road distance between set M and N
+"""
+def collective_road_distance_full(M_lines, N_lines):
+  """
+    Calculates the road distance between two sets of lines
+    :param M_lines: the set of lines in set M, N_lines: the set of lines in set N
+    :return: road distance between lines in set M and N
+  """
+  num_of_M_labels = len(M_lines)
+  road_M = []
+  for lm in M_lines:
+    road_M.append(lm["road1"])
+  road_M.append(M_lines[-1]["road2"])
+  road_N = []
+  for ln in N_lines:
+    road_N.append(ln["road1"])
+  road_N.append(N_lines[-1]["road2"])
+  matching_labels = hp.longest_common_subsequnce(road_M, road_N)
+  return 1/num_of_M_labels * (num_of_M_labels - matching_labels)
