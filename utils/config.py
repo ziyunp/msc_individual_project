@@ -23,7 +23,7 @@ FILENAMES = {
 } 
 
 DATA_FOR_HEATMAP = {
-  "labels": "{}/test_labels/labels_".format(heatmap_data),
+  "labels": "{}/labels/labels_".format(heatmap_data),
   "distances": "{}/distances/distance_matrix_".format(heatmap_data)
 }
 

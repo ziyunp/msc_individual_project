@@ -7,11 +7,8 @@ import utils.config as config
 import utils.helpers as hp
 import utils.tree as tree
 import utils.make_map as mm
-from tqdm import tqdm
 from statistics import mean
 from math import sin, atan, pi, radians
-import evaluation as ev
-import sys
 import pickle
 
 log = logging.getLogger(__name__)

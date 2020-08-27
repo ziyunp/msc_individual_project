@@ -1,25 +1,20 @@
-import utils.column_names as cn
-import utils.config as config
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import directed_hausdorff
 import logging
 import os
 from tqdm import tqdm
-from sklearn.neighbors import NearestNeighbors
-import sys
-import plot_kdist as kdist
-import evaluation as ev
 from sklearn.cluster import DBSCAN
 from collections import defaultdict
-from sklearn import metrics
 import utils.make_map as mm
 import basic_HD as HD
 import MLHD 
-import utils.process_dist_mat as pdm
+import utils.column_names as cn
+import utils.config as config
+import utils.evaluation as ev
+import utils.plot_kdist as kdist
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 def apply_dbscan(df, distances, eps, min_samples, used_labels):
   leg_ids = df[cn.LEG_ID].unique()
@@ -141,8 +136,8 @@ def main(distance_metric, clustering_algorithm, k=3):
     mm.make_map(df_sub, cn.ASSIGNED_CLUSTER, save=True, map_file_name=map_file)
 
     # Evaluate with homogeneity, completeness and v_measure scores
-    homogeneity, completeness, v_measure = metrics.homogeneity_completeness_v_measure(df_sub[cn.CLUSTER], df_sub[cn.ASSIGNED_CLUSTER])
-    print(homogeneity, completeness, v_measure)
+    homogeneity, completeness, v_measure = ev.homogeneity_completeness_v_measure(df_sub)
+    log.info("Homogeneity, Completeness, V-measure: {}, {}, {}".format(homogeneity, completeness, v_measure))
 
   result = pd.concat(result_list)
 
