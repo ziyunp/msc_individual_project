@@ -17,7 +17,7 @@ import utils.make_map as mm
 import clustering
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 def make_points(df):
     """

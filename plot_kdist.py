@@ -6,7 +6,7 @@ import os
 from kneed import KneeLocator
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 def valid_elbow(elbow, last_data_value):
     return elbow != None and elbow > 0 and elbow != last_data_value

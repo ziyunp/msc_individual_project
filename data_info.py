@@ -14,7 +14,7 @@ import utils.config as config
 """
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 def count_distinct_ids(data):
   log.info("{} distinct leg_ids from this dataset".format(data[cn.LEG_ID].nunique()))

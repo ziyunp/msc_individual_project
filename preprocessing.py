@@ -7,9 +7,10 @@ import utils.config as config
 import utils.tree as tree
 """
   Filter legs with two consecutive pings of more than 10 min away
+  Fill in road labels 
 """
 log = logging.getLogger(__name__)
-logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO")) #added
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 MISSING_PING_THRESHOLD = 10 # defines a missing ping if two consecutive pings are >= 10 min apart
 ROAD_THRESHOLD = 0.25 # km
@@ -109,4 +110,4 @@ def main(filename):
 
 
 if __name__ == "__main__":
-  main("test_excl_5km")
+  main("all_data")
