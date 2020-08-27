@@ -217,6 +217,27 @@ def make_hausdorff_matrix(df, modified=True, saved=False):
   return distances, labels
 
 """
+  The full string method of getting road distance between set M and N
+"""
+def collective_road_distance_full(M_lines, N_lines):
+  """
+    Calculates the road distance between two sets of lines
+    :param M_lines: the set of lines in set M, N_lines: the set of lines in set N
+    :return: road distance between lines in set M and N
+  """
+  num_of_M_labels = len(M_lines)
+  road_M = []
+  for lm in M_lines:
+    road_M.append(lm["road1"])
+  road_M.append(M_lines[-1]["road2"])
+  road_N = []
+  for ln in N_lines:
+    road_N.append(ln["road1"])
+  road_N.append(N_lines[-1]["road2"])
+  matching_labels = hp.longest_common_subsequnce(road_M, road_N)
+  return 1/num_of_M_labels * (num_of_M_labels - matching_labels)
+
+"""
   The functions below are the original methods in MLHD that are replaced
 """
 
@@ -277,24 +298,3 @@ def collective_perpendicular_distance_sum(lm, N_lines):
   for ln in N_lines:
     total_perp_distance += perpendicular_distance_btw_two_lines_original(lm, ln)
   return total_perp_distance
-
-"""
-  The full string method of getting road distance between set M and N
-"""
-def collective_road_distance_full(M_lines, N_lines):
-  """
-    Calculates the road distance between two sets of lines
-    :param M_lines: the set of lines in set M, N_lines: the set of lines in set N
-    :return: road distance between lines in set M and N
-  """
-  num_of_M_labels = len(M_lines)
-  road_M = []
-  for lm in M_lines:
-    road_M.append(lm["road1"])
-  road_M.append(M_lines[-1]["road2"])
-  road_N = []
-  for ln in N_lines:
-    road_N.append(ln["road1"])
-  road_N.append(N_lines[-1]["road2"])
-  matching_labels = hp.longest_common_subsequnce(road_M, road_N)
-  return 1/num_of_M_labels * (num_of_M_labels - matching_labels)
