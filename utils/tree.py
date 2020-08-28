@@ -7,9 +7,6 @@ def construct_balltree(points):
   points = np.array(list(map(hp.convert_coords_to_radians, points)))
   return BallTree(points, metric="haversine")
 
-def construct_kdtree(points):
-  return KDTree(points)
-
 def query_balltree_radius(tree, points, radius, ret_distance=False, sort=False):
   points = list(map(hp.convert_coords_to_radians, points))
   radius = radius / config.CONSTANTS["earth_radius"] # convert to radians
